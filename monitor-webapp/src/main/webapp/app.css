@@ -1,0 +1,53 @@
+.btn {
+    background-color: #008CBA;
+    height: 55px;
+    width: 150px;
+    border: none;
+    color: white;
+    padding: 12px 28px;
+    margin: 4px 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    float: left;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.btn-on {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 12px 28px;
+    margin: 4px 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    float: left;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.state-list-on {
+    color: #4CAF50;
+}
+
+.stack-left {
+
+    float: left;
+}
+
+.stack-right {
+
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
+
+.gauge {
+    width: 250px;
+    height: 300px;
+    float:left
+}

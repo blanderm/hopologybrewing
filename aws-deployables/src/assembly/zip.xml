@@ -1,0 +1,34 @@
+<assembly>
+<formats>
+    <format>zip</format>
+</formats>
+<fileSets>
+    <fileSet>
+        <directory>src/js</directory>
+        <outputDirectory>/</outputDirectory>
+        <includes>
+            <include>temp-poller.js</include>
+        </includes>
+        <lineEnding>unix</lineEnding>
+        <fileMode>0755</fileMode>
+    </fileSet>
+    <!--<fileSet>-->
+        <!--<directory>target</directory>-->
+        <!--<outputDirectory>/</outputDirectory>-->
+        <!--<includes>-->
+            <!--<include>aws-deployables-*.jar</include>-->
+        <!--</includes>-->
+        <!--<lineEnding>unix</lineEnding>-->
+        <!--<fileMode>0755</fileMode>-->
+    <!--</fileSet>-->
+    <!--<fileSet>-->
+        <!--<directory>../common/target</directory>-->
+        <!--<outputDirectory>/</outputDirectory>-->
+        <!--<includes>-->
+            <!--<include>common-*.jar</include>-->
+        <!--</includes>-->
+        <!--<lineEnding>unix</lineEnding>-->
+        <!--<fileMode>0755</fileMode>-->
+    <!--</fileSet>-->
+</fileSets>
+</assembly>
