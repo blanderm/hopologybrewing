@@ -19,22 +19,23 @@ public class BrewController {
     private BrewService brewService;
 
     @RequestMapping("/brews")
-    public HttpEntity<String> getBrews() {
+    public HttpEntity<List<BrewInfo>> getBrews() {
         List<BrewInfo> brews = brewService.getBrews();
-        StringBuffer buffer = new StringBuffer("[");
-
-        Iterator<BrewInfo> itr = brews.iterator();
-        while (itr.hasNext()) {
-            buffer.append("\"").append(itr.next().getName()).append("\"");
-
-            if (itr.hasNext()) {
-                buffer.append(",");
-            }
-        }
-
-        buffer.append("]");
-
-        return new HttpEntity<String>(buffer.toString());
+//        StringBuffer buffer = new StringBuffer("[");
+//
+//        Iterator<BrewInfo> itr = brews.iterator();
+//        while (itr.hasNext()) {
+//            buffer.append("\"").append(itr.next().getName()).append("\"");
+//
+//            if (itr.hasNext()) {
+//                buffer.append(",");
+//            }
+//        }
+//
+//        buffer.append("]");
+//
+//        return new HttpEntity<String>(buffer.toString());
+        return new HttpEntity<List<BrewInfo>>(brews);
     }
 
     @Autowired

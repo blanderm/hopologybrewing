@@ -25,21 +25,15 @@
             <div class="panel-body">
                 <div class="panel panel-default center">
                     <div class="panel-body" style="display: inline-block;">
-                        <!-- should add probe id to TemperatureProbe class and use that instead of $index -->
-                        <!--<div ng-controller="gaugeController">-->
-                            <!--<div ng-repeat="probe in tempProbes">-->
-                                <!--<div id="{{'temp-gauge-d' + $index}}" class="gauge" >{{ getGauge($index, 'temp-gauge-d') }}</div>-->
-                            <!--</div>-->
-                        <!--</div>-->
                         <div class="stack-left">
-                            <div class="center">
-                                <div id="temp-gauge0" class="gauge" style="display: inline-block;"></div>
-                                <div id="temp-gauge1" class="gauge" style="display: inline-block;"></div>
+                            <div class="center" ng-controller="gaugeController">
+                                 <span ng-repeat="options in gaugeOptions">
+                                    <div id="{{'temp-gauge' + $index}}" class="gauge" style="display: inline-block;">{{ renderGauges('temp-gauge' + $index, options) }}</div>
+                                 </span>
                             </div>
 
                             <div ng-controller="outputController" class="clear center pad">
                                     <span ng-repeat="output in outputs" class="lrpad" style="display: inline-block;">
-                                        <!--<div ng-show="getGauge($index, 'temp-gauge' + $index)" id="{{ 'temp-gauge' + $index }}" class="gauge"></div>-->
                                         <button id="{{'output' + $index}}" data-ng-class="[output.on ? 'btn btn-on' : 'btn']" ng-bind="output.name"/>
                                     </span>
                             </div>
@@ -94,12 +88,12 @@
                     </div>
                 </div>
 
-                <div>
-                    <div ng-controller="brewController" class="clear stack-right">
-                        <h4>Brew: <select ng-model="selectedBeer" ng-options="x for x in brews"></select></h4>
+                <div ng-controller="chartController">
+                    <div class="clear stack-right">
+                        <h4>Brew: <select ng-change="renderCharts(selectedBrew.brewDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
                     </div>
 
-                    <div ng-controller="chartController" class="clear">
+                    <div class="clear">
                         <div id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                         <div id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                     </div>

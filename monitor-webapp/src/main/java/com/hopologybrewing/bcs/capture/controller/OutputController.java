@@ -35,18 +35,18 @@ public class OutputController {
 
     @RequestMapping("/output/history")
     public HttpEntity<String> getHistoricalTemps() {
-        return getHistoricalTemps(null);
+        return getHistoricalTemps(0L);
     }
 
     @RequestMapping("/output/history/{date}")
-    public HttpEntity<String> getHistoricalTemps(@PathVariable Date date) {
+    public HttpEntity<String> getHistoricalTemps(@PathVariable long date) {
         StringBuffer buffer = new StringBuffer();
         Map<String, List<List>> probesMap = null;
 
-        if (date == null) {
+        if (date == 0L) {
             probesMap = outputService.getProbeDataForBrew();
         } else {
-            probesMap = outputService.getProbeDataForBrew(date);
+            probesMap = outputService.getProbeDataForBrew(new Date(date));
         }
 
         ObjectMapper mapper = new ObjectMapper();
