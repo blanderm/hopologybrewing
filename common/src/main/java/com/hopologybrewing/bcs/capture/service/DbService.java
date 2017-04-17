@@ -15,6 +15,8 @@ public interface DbService {
 
     Date getCurrentBrewDate() throws ExecutionException;
 
+    Date getMostRecentBrewDate() throws ExecutionException;
+
     BrewInfo createBrew(BrewInfo newBrew) throws Exception;
 
     List<BrewInfo> getAllBrews();

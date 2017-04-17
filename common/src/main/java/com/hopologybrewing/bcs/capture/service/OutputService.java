@@ -88,7 +88,7 @@ public class OutputService extends BcsService {
     public Map<String, List<List>> getProbeDataForBrew() {
         Date date = null;
         try {
-            date = dbService.getCurrentBrewDate();
+            date = dbService.getMostRecentBrewDate();
         } catch (ExecutionException e) {
             log.error("Failed to find current brew date - ", e);
         }

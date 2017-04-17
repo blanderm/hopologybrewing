@@ -30,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 public class DynamoDBService implements DbService {
     private static final Logger log = LoggerFactory.getLogger(DynamoDBService.class);
     private static final Regions CURRENT_REGION = Regions.US_EAST_1;
-    private static final String BD_CACHE_KEY = "bd_cache_key";
+    private static final String BD_CURR_CACHE_KEY = "bd_current_cache_key";
+    private static final String BD_RECENT_CACHE_KEY = "bd_recent_cache_key";
     private static final Cache<String, Date> cache = CacheBuilder.newBuilder()
             .expireAfterWrite(24L, TimeUnit.HOURS)
             .build();
@@ -44,7 +45,12 @@ public class DynamoDBService implements DbService {
 
     @Override
     public Date getCurrentBrewDate() throws ExecutionException {
-        return cache.get(BD_CACHE_KEY, new BrewDateGenerator());
+        return cache.get(BD_CURR_CACHE_KEY, new CurrentBrewDateCallable());
+    }
+
+    @Override
+    public Date getMostRecentBrewDate() throws ExecutionException {
+        return cache.get(BD_RECENT_CACHE_KEY, new MostRecentBrewDateCallable());
     }
 
     @Override
@@ -56,8 +62,9 @@ public class DynamoDBService implements DbService {
         newBrew.setLastUpdated(new Date());
         mapper.save(newBrew);
 
-        // clear the cache
-        cache.put(BD_CACHE_KEY, new BrewDateGenerator().call());
+        // clear the currentBrewCache
+        cache.put(BD_CURR_CACHE_KEY, new CurrentBrewDateCallable().call());
+        cache.put(BD_RECENT_CACHE_KEY, new MostRecentBrewDateCallable().call());
 
         return newBrew;
     }
@@ -247,7 +254,7 @@ public class DynamoDBService implements DbService {
         return item;
     }
 
-    private class BrewDateGenerator implements Callable<Date> {
+    private class CurrentBrewDateCallable implements Callable<Date> {
         @Override
         public Date call() throws Exception {
             Date latestBrewDate = null;
@@ -265,6 +272,29 @@ public class DynamoDBService implements DbService {
             }
 
             return latestBrewDate;
+        }
+    }
+
+    private class MostRecentBrewDateCallable implements Callable<Date> {
+        @Override
+        public Date call() throws Exception {
+            long latestBrewDate = 0L;
+            List<BrewInfo> list = getAllBrews();
+
+            for (BrewInfo info : list) {
+                if (info.isCurrentBrew()) {
+                    latestBrewDate = info.getBrewDate();
+                    break;
+                } else if (latestBrewDate == 0L || info.getBrewDate() > latestBrewDate) {
+                    latestBrewDate = info.getBrewDate();
+                }
+            }
+
+            if (latestBrewDate == 0L) {
+                log.error("Couldn't find the latest brew date.  It's possible that there isn't any brew info in the db.");
+            }
+
+            return new Date(latestBrewDate);
         }
     }
 }
