@@ -11,12 +11,28 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
 
     <!-- Add bean definitions -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${spring.mail.host}"/>
+        <property name="port" value="${spring.mail.port}"/>
+        <property name="username" value="${spring.mail.username}"/>
+        <property name="password" value="${spring.mail.password}"/>
+    </bean>
+
+    <bean id="logService" class="com.hopologybrewing.bcs.capture.service.LogService">
+        <property name="outputFile" value="${outputs.file}"/>
+        <property name="tempFile" value="${temps.file}"/>
+    </bean>
+
+    <bean id="brewService" class="com.hopologybrewing.bcs.capture.service.BrewService">
+        <property name="dbService" ref="dynamoDbService"/>
+    </bean>
+
     <bean id="tempService" class="com.hopologybrewing.bcs.capture.service.TemperatureService">
         <property name="fileLocation" value="${temps.file}"/>
         <property name="dbService" ref="dynamoDbService"/>
     </bean>
 
-    <bean id="outputService" class="com.hopologybrewing.bcs.capture.service.OutputService">
+    <bean id="temperatureService" class="com.hopologybrewing.bcs.capture.service.OutputService">
         <property name="fileLocation" value="${outputs.file}"/>
         <property name="dbService" ref="dynamoDbService"/>
     </bean>
@@ -30,21 +46,21 @@
         <property name="dbService" ref="dynamoDbService"/>
     </bean>
 
-    <int:inbound-channel-adapter id="temps" ref="tempMessageRecorder" method="getNextTemperatureReading" auto-startup="true" >
-        <int:poller fixed-rate="300000" max-messages-per-poll="1"/>
-    </int:inbound-channel-adapter>
+    <!--<int:inbound-channel-adapter id="temps" ref="tempMessageRecorder" method="getNextTemperatureReading" auto-startup="true" >-->
+        <!--<int:poller fixed-rate="300000" max-messages-per-poll="1"/>-->
+    <!--</int:inbound-channel-adapter>-->
 
-    <int:service-activator input-channel="temps" ref="tempMessageRecorder"
-                           method="recordMessage"/>
+    <!--<int:service-activator input-channel="temps" ref="tempMessageRecorder"-->
+                           <!--method="recordMessage"/>-->
 
-    <bean id="outputMessageRecorder" class="com.hopologybrewing.bcs.capture.batch.OutputMessageRecorder">
-        <property name="dbService" ref="dynamoDbService"/>
-    </bean>
+    <!--<bean id="outputMessageRecorder" class="com.hopologybrewing.bcs.capture.batch.OutputMessageRecorder">-->
+        <!--<property name="dbService" ref="dynamoDbService"/>-->
+    <!--</bean>-->
 
-    <int:inbound-channel-adapter id="outputs" ref="outputMessageRecorder" method="getNextOutputReading" auto-startup="true" >
-        <int:poller fixed-rate="2500" max-messages-per-poll="1"/>
-    </int:inbound-channel-adapter>
+    <!--<int:inbound-channel-adapter id="outputs" ref="outputMessageRecorder" method="getNextOutputReading" auto-startup="true" >-->
+        <!--<int:poller fixed-rate="2500" max-messages-per-poll="1"/>-->
+    <!--</int:inbound-channel-adapter>-->
 
-    <int:service-activator input-channel="outputs" ref="outputMessageRecorder"
-                           method="recordMessage"/>
+    <!--<int:service-activator input-channel="outputs" ref="outputMessageRecorder"-->
+                           <!--method="recordMessage"/>-->
 </beans>

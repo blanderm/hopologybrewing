@@ -1,10 +1,12 @@
-package com.hopologybrewing.bcs.capture.service;
+package com.hopologybrewing.bcs.capture.controller;
 
+import com.hopologybrewing.bcs.capture.service.OutputService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -14,13 +16,15 @@ import java.util.Map;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration("classpath:applicationContext.xml")
-public class OutputServiceTest {
+public class OutputControllerTest {
     private OutputService outputService;
 
     @Test
     public void getProbeDataForBrew() throws Exception {
-        Map<String, List<List>> map = outputService.getProbeDataForBrew();
-        Assert.assertNotEquals("Data point size not 0", 0, map.size());
+        OutputController controller = new OutputController();
+        controller.setOutputService(outputService);
+        HttpEntity<String> response = controller.getHistoricalTemps(null);
+        Assert.assertNotNull("Data point size not 0", response.getBody());
     }
 
     @Autowired

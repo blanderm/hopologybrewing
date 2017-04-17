@@ -1,7 +1,8 @@
 package com.hopologybrewing.bcs.capture.controller;
 
-import com.hopologybrewing.bcs.capture.service.StateService;
+import com.hopologybrewing.bcs.capture.model.Process;
 import com.hopologybrewing.bcs.capture.model.State;
+import com.hopologybrewing.bcs.capture.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +22,8 @@ public class StateController {
     }
 
     @RequestMapping("/process/{pid}/current_state")
-    public HttpEntity<State> getCurrentState(@PathVariable String pid) {
-        return new HttpEntity<State>(stateService.getCurrentState(pid));
+    public HttpEntity<Process> getCurrentState(@PathVariable String pid) {
+        return new HttpEntity<Process>(stateService.getCurrentProcessState(pid));
     }
 
     @Autowired

@@ -3,6 +3,8 @@ package com.hopologybrewing.bcs.capture.batch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hopologybrewing.bcs.capture.aws.dynamo.DynamoDBService;
+import com.hopologybrewing.bcs.capture.model.Recording;
 import com.hopologybrewing.bcs.capture.model.TemperatureProbe;
 import com.hopologybrewing.bcs.capture.model.TemperatureProbeRecording;
 import com.hopologybrewing.bcs.capture.service.DbService;
@@ -22,6 +24,7 @@ public class TemperatureProbeMessageRecorder {
     private static final Logger historyLogger = LoggerFactory.getLogger("bcs-temps-history");
     private TemperatureService tempService;
     private DbService dbService;
+    private DynamoDBService db = new DynamoDBService();
 
     public List<TemperatureProbeRecording> getNextTemperatureReading() {
         Date date = new Date();
@@ -41,17 +44,19 @@ public class TemperatureProbeMessageRecorder {
     public void recordMessage(List<TemperatureProbeRecording> message) {
         if (message != null && message.size() > 0) {
             ObjectMapper mapper = new ObjectMapper();
-            
+
+            List<Recording> recordings = new ArrayList<>();
             for (TemperatureProbeRecording recording : message) {
                 try {
                     historyLogger.info(mapper.writeValueAsString(message) + "\n");
+                    recordings.add(recording);
                 } catch (JsonProcessingException e) {
                     log.error("Failed creating json ", e);
                 }
-
-                // put message in DynamoDB
-                dbService.writeRecording(recording);
             }
+
+            // put message in DynamoDB
+            db.saveReadings(recordings);
         }
     }
 

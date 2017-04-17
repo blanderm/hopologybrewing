@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class TemperatureService extends BcsService {
@@ -72,26 +73,58 @@ public class TemperatureService extends BcsService {
         return probesMap;
     }
 
-    public Map<String, List<List>> getHistoricalProbeData(long lower, long upper, int limit) {
+//    public Map<String, List<List>> getHistoricalProbeData(long lower, long upper, int limit) {
+//        Map<String, List<List>> probesMap = new HashMap<>();
+//        List<Recording> recordings = null;
+//        TemperatureProbeRecording probeRecording = null;
+//        List<TemperatureProbe> probes = getEnabledProbes();
+//        for (TemperatureProbe probe : probes) {
+//            // todo: too much leakage from dynamo here, should be able to provide the bean and the service figures it out
+//            // todo: should make a persistence service and have dynamo and file versions to facilitate both flows and abstract AWS
+//            recordings = dbService.queryRecording(TemperatureProbeRecording.class, probe.getName(), lower, upper, limit, true);
+//
+//            for (Recording recording : recordings) {
+//                if (recording instanceof TemperatureProbeRecording) {
+//                    probeRecording = (TemperatureProbeRecording) recording;
+//
+//                    addDataPoint(probesMap, probeRecording.getData().getName(), recording.getTimestamp(), probeRecording.getData().getTemp() / 10);
+//
+//                    // skip points where the SP isn't set
+//                    if (probeRecording.getData().getSetpoint() > 0) {
+//                        addDataPoint(probesMap, probeRecording.getData().getName() + "-SP", recording.getTimestamp(), probeRecording.getData().getSetpoint() / 10);
+//                    }
+//                }
+//            }
+//        }
+//
+//        return probesMap;
+//    }
+
+    public Map<String, List<List>> getProbeDataForBrew() {
+        Date date = null;
+        try {
+            date = dbService.getCurrentBrewDate();
+        } catch (ExecutionException e) {
+            log.error("Failed to find current brew date - ", e);
+        }
+
+        return getProbeDataForBrew(date);
+    }
+
+    public Map<String, List<List>> getProbeDataForBrew(Date brewDate) {
         Map<String, List<List>> probesMap = new HashMap<>();
-        List<Recording> recordings = null;
         TemperatureProbeRecording probeRecording = null;
-        List<TemperatureProbe> probes = getEnabledProbes();
-        for (TemperatureProbe probe : probes) {
-            // todo: too much leakage from dynamo here, should be able to provide the bean and the service figures it out
-            // todo: should make a persistence service and have dynamo and file versions to facilitate both flows and abstract AWS
-            recordings = dbService.queryRecording(TemperatureProbeRecording.class, probe.getName(), lower, upper, limit, true);
+        List<Recording> recordings = dbService.findTemperatureReadings(brewDate);
 
-            for (Recording recording : recordings) {
-                if (recording instanceof TemperatureProbeRecording) {
-                    probeRecording = (TemperatureProbeRecording) recording;
+        for (Recording recording : recordings) {
+            if (recording instanceof TemperatureProbeRecording) {
+                probeRecording = (TemperatureProbeRecording) recording;
 
-                    addDataPoint(probesMap, probeRecording.getData().getName(), recording.getTimestamp(), probeRecording.getData().getTemp() / 10);
+                addDataPoint(probesMap, probeRecording.getData().getName(), recording.getTimestamp(), probeRecording.getData().getTemp() / 10);
 
-                    // skip points where the SP isn't set
-                    if (probeRecording.getData().getSetpoint() > 0) {
-                        addDataPoint(probesMap, probeRecording.getData().getName() + "-SP", recording.getTimestamp(), probeRecording.getData().getSetpoint() / 10);
-                    }
+                // skip points where the SP isn't set
+                if (probeRecording.getData().getSetpoint() > 0) {
+                    addDataPoint(probesMap, probeRecording.getData().getName() + "-SP", recording.getTimestamp(), probeRecording.getData().getSetpoint() / 10);
                 }
             }
         }

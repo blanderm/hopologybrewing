@@ -1,7 +1,7 @@
 'use strict';
 
 const http = require('http');
-const AWS = require("aws-sdk");
+const AWS = require("com.hopologybrewing.bcs.capture.aws-sdk");
 
 const encryptedHost = process.env['bcs_ip'];
 const encryptedUser = process.env['user'];
@@ -50,15 +50,13 @@ function processEvent(event, context, callback) {
 
     var docClient = new AWS.DynamoDB.DocumentClient();
 
-    var table = "temperature_readings";
-    var id = "Conical - Left";
-    var timestamp = 1485488642619;
+    var table = "beer_fermentation";
+    var id = "current";
 
     var params = {
         TableName: table,
         Key:{
-            "id": id,
-            "timestamp": timestamp
+            "brew_date": id
         }
     };
 
@@ -66,7 +64,9 @@ function processEvent(event, context, callback) {
         if (err) {
             console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
         } else {
-            console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
+            var json = JSON.parse(JSON.stringify(data, null, 2));
+            console.log("GetItem succeeded:", json);
+            console.log("GetItem succeeded:", json.Item.latest_brew);
         }
     });
 

@@ -7,6 +7,7 @@ import java.util.Date;
  */
 public class TemperatureProbeRecording extends Recording {
     private TemperatureProbe data;
+    public static final String TEMPERATURE_TYPE = "temperature_recording";
 
     public TemperatureProbeRecording() {
     }
@@ -14,6 +15,12 @@ public class TemperatureProbeRecording extends Recording {
     public TemperatureProbeRecording(TemperatureProbe probe, Date timestamp) {
         this.data = probe;
         this.timestamp = timestamp;
+    }
+
+    public TemperatureProbeRecording(TemperatureProbe probe, Date timestamp, Date brewDate) {
+        this.data = probe;
+        this.timestamp = timestamp;
+        this.setBrewDate(brewDate);
     }
 
     @Override
@@ -26,12 +33,17 @@ public class TemperatureProbeRecording extends Recording {
     }
 
     @Override
-    protected String getName() {
+    public String getName() {
         String name = null;
         if (data != null) {
             name = data.getName();
         }
 
         return name;
+    }
+
+    @Override
+    public String getType() {
+        return TEMPERATURE_TYPE;
     }
 }

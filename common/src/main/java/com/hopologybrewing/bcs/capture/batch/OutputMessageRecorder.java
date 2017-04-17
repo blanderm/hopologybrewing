@@ -3,8 +3,10 @@ package com.hopologybrewing.bcs.capture.batch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hopologybrewing.bcs.capture.aws.dynamo.DynamoDBService;
 import com.hopologybrewing.bcs.capture.model.Output;
 import com.hopologybrewing.bcs.capture.model.OutputRecording;
+import com.hopologybrewing.bcs.capture.model.Recording;
 import com.hopologybrewing.bcs.capture.service.DbService;
 import com.hopologybrewing.bcs.capture.service.OutputService;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ public class OutputMessageRecorder {
     private static final Logger historyLogger = LoggerFactory.getLogger("bcs-outputs-history");
     private OutputService outputService;
     private DbService dbService;
+    private DynamoDBService db = new DynamoDBService();
 
     public List<OutputRecording> getNextOutputReading() {
         Date date = new Date();
@@ -40,16 +43,18 @@ public class OutputMessageRecorder {
     public void recordMessage(List<OutputRecording> message) {
         if (message != null && message.size() > 0) {
             ObjectMapper mapper = new ObjectMapper();
+            List<Recording> recordings = new ArrayList<>();
             for (OutputRecording recording : message) {
                 try {
                     historyLogger.info(mapper.writeValueAsString(message) + "\n");
+                    recordings.add(recording);
                 } catch (JsonProcessingException e) {
                     log.error("Failed creating json ", e);
                 }
-
-                // put message in DynamoDB
-                dbService.writeRecording(recording);
             }
+
+            // put message in DynamoDB
+            db.saveReadings(recordings);
         }
     }
 

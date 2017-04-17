@@ -28,6 +28,16 @@
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 }
 
+.btn-gray {
+    background-color: #C0C0C0; /* Green */
+    color: black;
+}
+
+.btn-gray:hover {
+    background-color: #C0C0C0; /* Green */
+    color: #696969;
+}
+
 .state-list-on {
     color: #4CAF50;
 }
@@ -49,5 +59,32 @@
 .gauge {
     width: 250px;
     height: 300px;
-    float:left
+}
+
+.pad {
+    padding-top: 5px;
+    padding-bottom: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.hr {
+    width: 100%;
+    font-size: 1px;
+    color: #000000;
+    line-height: 1px;
+
+    background-color: grey;
+    margin-top: -6px;
+    margin-bottom: 10px;
+}
+
+.center {
+    margin: auto;
+    text-align: center;
+}
+
+.lrpad {
+    padding-left: 42px;
+    padding-right: 42px;
 }

@@ -2,8 +2,8 @@ package com.hopologybrewing.bcs.capture.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hopologybrewing.bcs.capture.model.ExitCondition;
-import com.hopologybrewing.bcs.capture.model.State;
 import com.hopologybrewing.bcs.capture.model.Process;
+import com.hopologybrewing.bcs.capture.model.State;
 import com.hopologybrewing.bcs.capture.model.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,14 +23,13 @@ public class StateService extends BcsService {
         return (State) getData(Type.STATE, processId, stateId);
     }
 
-    public State getCurrentState(String processId) {
+    public Process getCurrentProcessState(String processId) {
         // get process to find active state
         Process p = (Process) getData(Type.PROCESS, processId);
 
-        State state = null;
         if (p.isRunning() && p.getCurrentState() != null) {
             Integer stateId = p.getCurrentState().getState();
-            state = (State) getData(Type.STATE, processId, String.valueOf(stateId));
+            State state = (State) getData(Type.STATE, processId, String.valueOf(stateId));
 
             if (state.getTimers() != null) {
                 Timer timer;
@@ -76,8 +75,10 @@ public class StateService extends BcsService {
 
                 state.setExitConditions(enabledExitConditions);
             }
+
+            p.getStatesObj().set(stateId, state);
         }
 
-        return state;
+        return p;
     }
 }

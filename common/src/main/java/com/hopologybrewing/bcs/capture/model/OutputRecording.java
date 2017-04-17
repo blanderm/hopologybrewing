@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class OutputRecording extends Recording {
     private Output data;
+    public static final String OUTPUT_TYPE = "output_recording";
 
     public OutputRecording() {
     }
@@ -23,12 +24,17 @@ public class OutputRecording extends Recording {
     }
 
     @Override
-    protected String getName() {
+    public String getName() {
         String name = null;
         if (data != null) {
             name = data.getName();
         }
 
         return name;
+    }
+
+    @Override
+    public String getType() {
+        return OUTPUT_TYPE;
     }
 }

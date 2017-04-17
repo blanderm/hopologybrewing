@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +35,20 @@ public class OutputController {
 
     @RequestMapping("/output/history")
     public HttpEntity<String> getHistoricalTemps() {
+        return getHistoricalTemps(null);
+    }
+
+    @RequestMapping("/output/history/{date}")
+    public HttpEntity<String> getHistoricalTemps(@PathVariable Date date) {
         StringBuffer buffer = new StringBuffer();
-        Map<String, List<List>> probesMap = outputService.getHistoricalOutputData(0, 0, 604800);
+        Map<String, List<List>> probesMap = null;
+
+        if (date == null) {
+            probesMap = outputService.getProbeDataForBrew();
+        } else {
+            probesMap = outputService.getProbeDataForBrew(date);
+        }
+
         ObjectMapper mapper = new ObjectMapper();
 
         try {

@@ -1,4 +1,36 @@
 angular.module('hopologybrewing-bcs', [])
+    .controller('brewController', function ($scope, $http) {
+        $http.get('/brews').
+        then(function (response) {
+            $scope.brews = response.data;
+        });
+    })
+
+    .controller('logController', function ($scope, $http) {
+        $scope.clearLog = function(type) {
+            if (confirm("Are you sure you want to delete all data?") == true) {
+                $http.get('/log/clear?type='.concat(type));
+            } else {
+                // do nothing
+            }
+        }
+    })
+
+    .controller('alertController', function ($scope, $http) {
+        $http.get('/alert/status').
+        then(function (response) {
+            $scope.alertEnabled = response.data;
+        });
+
+        $scope.toggleAlerting = function(type) {
+            if (confirm("Are you sure you want to toggle alerting?") == true) {
+                $http.get('/alert/toggle');
+            } else {
+                // do nothing
+            }
+        }
+    })
+
     .controller('outputController', function ($scope, $http) {
         $http.get('/output').
             then(function (response) {
@@ -22,6 +54,8 @@ angular.module('hopologybrewing-bcs', [])
                 // find active process and get current state
                 if (response.data != null) {
                     var enabledProcesses = [];
+                    $scope.activeProcesses = [];
+
                     for (var i = 0; i < response.data.length; i++) {
                         if (response.data[i]) {
                             enabledProcesses.push(i);
@@ -29,58 +63,49 @@ angular.module('hopologybrewing-bcs', [])
                     }
 
                     for (var j = 0; j < enabledProcesses.length; j++) {
-                        $http.get('/process/'.concat(enabledProcesses[j])).
-                            then(function (processResponse) {
-                                if (processResponse.data != null) {
-
-                                    $scope.activeProcess = processResponse.data;
-                                }
-                            });
-
                         $http.get('/process/'.concat(enabledProcesses[j]).concat('/current_state')).
-                            then(function (stateResponse) {
-                                $scope.activeState = stateResponse.data;
-                                var exitConditions = stateResponse.data.exitConditions;
+                        then(function (processStateResponse) {
+                            var exitConditions = processStateResponse.data.statesObj[processStateResponse.data.current_state.state].exitConditions;
 
-                                if (exitConditions != null) {
-                                    for (var k = 0; k < exitConditions.length; k++) {
-                                        $scope.nextState = $scope.activeProcess.states[exitConditions[k].next_state];
-                                    }
+                            if (exitConditions != null) {
+                                for (var k = 0; k < exitConditions.length; k++) {
+                                    processStateResponse.data.nextState = processStateResponse.data.states[exitConditions[k].next_state];
                                 }
+                            }
 
-                                $scope.convertTimerValue = function (value) {
-                                    // days
-                                    var calculatedTimer = value / 10 / 60 / 60 / 24;
-                                    var strTimer = "";
-                                    var floor;
-
-                                    floor = Math.floor(calculatedTimer);
-                                    if (floor >= 1) {
-                                        strTimer = floor + (floor > 1 ? " days " : " day ");
-                                    }
-
-                                    // hours
-                                    calculatedTimer = calculatedTimer % 1 * 24;
-                                    floor = Math.floor(calculatedTimer);
-                                    strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
-
-                                    // mins
-                                    calculatedTimer = calculatedTimer % 1 * 60;
-                                    floor = Math.floor(calculatedTimer);
-                                    strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
-
-                                    // seconds
-                                    calculatedTimer = calculatedTimer % 1 * 60;
-                                    floor = Math.floor(calculatedTimer);
-
-                                    return strTimer + (floor < 10 ? '0' + floor : floor) ;
-                                };
-
-                                //$scope.activeStateTimers = stateResponse.data.timers;
-                            });
+                            $scope.activeProcesses.push(processStateResponse.data);
+                        });
                     }
                 }
             });
+
+        $scope.convertTimerValue = function (value) {
+            // days
+            var calculatedTimer = value / 10 / 60 / 60 / 24;
+            var strTimer = "";
+            var floor;
+
+            floor = Math.floor(calculatedTimer);
+            if (floor >= 1) {
+                strTimer = floor + (floor > 1 ? " days " : " day ");
+            }
+
+            // hours
+            calculatedTimer = calculatedTimer % 1 * 24;
+            floor = Math.floor(calculatedTimer);
+            strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
+
+            // mins
+            calculatedTimer = calculatedTimer % 1 * 60;
+            floor = Math.floor(calculatedTimer);
+            strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
+
+            // seconds
+            calculatedTimer = calculatedTimer % 1 * 60;
+            floor = Math.floor(calculatedTimer);
+
+            return strTimer + (floor < 10 ? '0' + floor : floor) ;
+        };
     })
 
     .controller('gaugeController', function ($scope, $http) {
@@ -89,7 +114,6 @@ angular.module('hopologybrewing-bcs', [])
                 // find active process and get current state
                 if (response.data != null) {
                     $scope.tempProbes = response.data;
-                    console.log($scope.tempProbes);
                 }
             });
 
@@ -213,7 +237,8 @@ angular.module('hopologybrewing-bcs', [])
 
                         tooltip: {
                             shared: true,
-                            crosshairs: true
+                            crosshairs: true,
+                            dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
                         },
 
                         xAxis: {
@@ -222,7 +247,7 @@ angular.module('hopologybrewing-bcs', [])
                             //                        tickWidth: 0,
                             //                        gridLineWidth: 1,
                             labels: {
-                                //format: '{value:%mm/%dd/%yyyy HH:mm:ss}',
+                                // format: '{value:%m/%d/%y %H:%M}',
                                 align: 'right',
                                 rotation: -30
                             }
@@ -303,7 +328,8 @@ angular.module('hopologybrewing-bcs', [])
 
                         tooltip: {
                             shared: true,
-                            crosshairs: true
+                            crosshairs: true,
+                            dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
                         },
 
                         xAxis: {
@@ -312,7 +338,7 @@ angular.module('hopologybrewing-bcs', [])
                             //                        tickWidth: 0,
                             //                        gridLineWidth: 1,
                             labels: {
-                                //format: '{value:%mm/%dd/%yyyy HH:mm:ss}',
+                                // format: '{value:%m/%d/%y %H:%M}',
                                 align: 'right',
                                 rotation: -30
                             }

@@ -6,21 +6,15 @@ import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Recording {
-    private String id;
     protected Date timestamp;
+    private Date brewDate;
 
-    public String getId() {
-        // name plus timestamp is unique -> name = primary, timestamp = sort key
-        String name = getName();
-        if (id == null && name != null) {
-            setId(name);
-        }
-
-        return id;
+    public Date getBrewDate() {
+        return brewDate;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setBrewDate(Date brewDate) {
+        this.brewDate = brewDate;
     }
 
     public Date getTimestamp() {
@@ -31,7 +25,9 @@ public abstract class Recording {
         this.timestamp = timestamp;
     }
 
-    protected abstract String getName();
+    public abstract String getName();
 
     public abstract Object getData();
+
+    public abstract String getType();
 }

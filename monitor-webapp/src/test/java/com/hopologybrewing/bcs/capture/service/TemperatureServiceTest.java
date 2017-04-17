@@ -14,17 +14,17 @@ import java.util.Map;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration("classpath:applicationContext.xml")
-public class OutputServiceTest {
-    private OutputService outputService;
+public class TemperatureServiceTest {
+    private TemperatureService temperatureService;
 
     @Test
     public void getProbeDataForBrew() throws Exception {
-        Map<String, List<List>> map = outputService.getProbeDataForBrew();
+        Map<String, List<List>> map = temperatureService.getProbeDataForBrew();
         Assert.assertNotEquals("Data point size not 0", 0, map.size());
     }
 
     @Autowired
-    public void setOutputService(OutputService outputService) {
-        this.outputService = outputService;
+    public void setTemperatureService(TemperatureService temperatureService) {
+        this.temperatureService = temperatureService;
     }
 }

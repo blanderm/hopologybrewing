@@ -2,6 +2,7 @@ package com.hopologybrewing.bcs.capture.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,6 +39,14 @@ public class TemperatureProbe {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void addCoefficient(Double coefficient) {
+        if (coefficients == null) {
+            coefficients = new ArrayList<>();
+        }
+
+        coefficients.add(coefficient);
     }
 
     public List<Double> getCoefficients() {

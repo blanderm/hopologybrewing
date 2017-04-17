@@ -8,10 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +37,21 @@ public class TemperatureController {
 
     @RequestMapping("/temp/history")
     public HttpEntity<String> getHistoricalTemps() {
+        return getHistoricalTemps(null);
+    }
+
+    @RequestMapping("/temp/history/{date}")
+    public HttpEntity<String> getHistoricalTemps(@PathVariable Date date) {
         StringBuffer buffer = new StringBuffer();
         //todo: includes all points right now, change to query a range based on the beer profile (a.k.a. the brew)
-        Map<String, List<List>> probesMap = tempService.getHistoricalProbeData(0, 0, 604800);
+        Map<String, List<List>> probesMap = null;
+
+        if (date == null) {
+            probesMap = tempService.getProbeDataForBrew();
+        } else {
+            probesMap = tempService.getProbeDataForBrew(date);
+        }
+
         ObjectMapper mapper = new ObjectMapper();
 
         try {

@@ -10,10 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by ddcbryanl on 12/14/16.
@@ -23,7 +21,8 @@ public class OutputService extends BcsService {
     private String fileLocation;
     private DbService dbService;
 
-    public OutputService() {}
+    public OutputService() {
+    }
 
     public OutputService(String user, String pwd) {
         super(user, pwd);
@@ -61,7 +60,8 @@ public class OutputService extends BcsService {
 
         List<Output> outputs = getEnabledOutputs();
         for (Output output : outputs) {
-            recordingList = dbService.queryRecording(OutputRecording.class, output.getName(), lower, upper, limit, false);
+            // todo: fix it
+//            recordingList = dbService.queryRecording(OutputRecording.class, output.getName(), lower, upper, limit, false);
 
             for (Recording recording : recordingList) {
                 if (recording instanceof OutputRecording) {
@@ -79,6 +79,45 @@ public class OutputService extends BcsService {
                     recordingDataList.add(data);
                     outputsMap.put(output.getName(), recordingDataList);
                 }
+            }
+        }
+
+        return outputsMap;
+    }
+
+    public Map<String, List<List>> getProbeDataForBrew() {
+        Date date = null;
+        try {
+            date = dbService.getCurrentBrewDate();
+        } catch (ExecutionException e) {
+            log.error("Failed to find current brew date - ", e);
+        }
+
+        return getProbeDataForBrew(date);
+    }
+
+    public Map<String, List<List>> getProbeDataForBrew(Date brewDate) {
+        List data = null;
+        List<List> recordingDataList = null;
+        OutputRecording outputRecording = null;
+        Map<String, List<List>> outputsMap = new HashMap<>();
+        List<Recording> recordings = dbService.findOutputReadings(brewDate);
+
+        for (Recording recording : recordings) {
+            if (recording instanceof OutputRecording) {
+                outputRecording = (OutputRecording) recording;
+                recordingDataList = outputsMap.get(outputRecording.getName());
+
+                if (recordingDataList == null) {
+                    recordingDataList = new ArrayList<>();
+                }
+
+                data = new ArrayList<>();
+                data.add(outputRecording.getTimestamp());
+                data.add((outputRecording.getData().isOn() ? 1 : 0));
+
+                recordingDataList.add(data);
+                outputsMap.put(outputRecording.getName(), recordingDataList);
             }
         }
 

@@ -1,19 +1,25 @@
 package com.hopologybrewing.bcs.capture.service;
 
 import com.hopologybrewing.bcs.capture.BasicAuthRestTemplate;
-import com.hopologybrewing.bcs.capture.model.Output;
-import com.hopologybrewing.bcs.capture.model.State;
+import com.hopologybrewing.bcs.capture.model.*;
 import com.hopologybrewing.bcs.capture.model.Process;
 import com.hopologybrewing.bcs.capture.model.TemperatureProbe;
 import com.hopologybrewing.bcs.capture.model.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.net.NoRouteToHostException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public abstract class BcsService {
@@ -47,13 +53,18 @@ public abstract class BcsService {
         classMap = Collections.unmodifiableMap(clz);
     }
 
+    private AtomicBoolean alertEnabled = new AtomicBoolean(true);
+    private JavaMailSender mailSender;
+
     public BcsService() {
         bcsIp = System.getProperty(BcsConstants.BCS_IP);
         if (StringUtils.isEmpty(bcsIp)) {
             bcsIp = System.getenv(BcsConstants.BCS_IP);
         }
-
-        this.template = new BasicAuthRestTemplate();
+    }
+        @Autowired
+    public void setMailSender(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
     }
 
     public BcsService(String user, String pwd) {
@@ -75,13 +86,55 @@ public abstract class BcsService {
         ResponseEntity response = null;
 
         try {
+            RestTemplate template = new BasicAuthRestTemplate();
+            String bcsIp = System.getProperty(BcsConstants.BCS_IP);
             response = template.getForEntity("http://" + bcsIp + String.format(urlMap.get(type), ids), classMap.get(type));
             obj = response.getBody();
         } catch (Throwable t) {
+            if (t instanceof NoRouteToHostException) {
+                // send alerts!
+                if (alertEnabled.get()) {
+                    sendMessage(t.getMessage());
+                }
+            }
+
             log.error("Error getting data - ", t);
         }
 
         return obj;
+    }
+
+    public void toggleAlerting() {
+        boolean currentState = alertEnabled.get();
+        log.info("Setting alerting to "+ (!currentState ? "on" : "off"));
+        alertEnabled.set(!currentState);
+    }
+
+    public boolean getAlertStatus() {
+        return alertEnabled.get();
+    }
+
+    public void sendTestMessage() {
+        if (alertEnabled.get()) {
+            sendMessage("Just a TEST!!");
+        } else {
+            log.info("Alerting is disabled, didn't send message.");
+        }
+    }
+
+    private void sendMessage(String details) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
+            helper.setFrom("Hopology Brewing <monitor@hopologybrewing.com>");
+            helper.setTo(new String[] {"8023382890@vtext.com", "8027353410@vtext.com", "info@hopologybrewing.com"});
+            helper.setText("HopologyBrewing :: Unable to contact the BCS Controller and can't monitor temps and output!  Error: " + details);
+
+            mailSender.send(message);
+            log.info("Message sent.");
+        } catch (MessagingException e) {
+            log.error("Error sending alert for NoRouteToHostException - ", e);
+        }
     }
 
     public enum Type {TEMP, PROCESS, PROCESSES, STATE, TIMER, OUTPUT, OUTPUTS, EXIT_CONDITIONS}
