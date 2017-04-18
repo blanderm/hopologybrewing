@@ -18,6 +18,11 @@
         <property name="password" value="${spring.mail.password}"/>
     </bean>
 
+    <bean id="dataLoader" class="com.hopologybrewing.bcs.capture.batch.DataLoader">
+        <property name="outputFileLocation" value="${outputs.file}"/>
+        <property name="tempFileLocation" value="${temps.file}"/>
+    </bean>
+
     <bean id="logService" class="com.hopologybrewing.bcs.capture.service.LogService">
         <property name="outputFile" value="${outputs.file}"/>
         <property name="tempFile" value="${temps.file}"/>
@@ -53,9 +58,9 @@
     <!--<int:service-activator input-channel="temps" ref="tempMessageRecorder"-->
                            <!--method="recordMessage"/>-->
 
-    <!--<bean id="outputMessageRecorder" class="com.hopologybrewing.bcs.capture.batch.OutputMessageRecorder">-->
-        <!--<property name="dbService" ref="dynamoDbService"/>-->
-    <!--</bean>-->
+    <bean id="outputMessageRecorder" class="com.hopologybrewing.bcs.capture.batch.OutputMessageRecorder">
+        <property name="dbService" ref="dynamoDbService"/>
+    </bean>
 
     <!--<int:inbound-channel-adapter id="outputs" ref="outputMessageRecorder" method="getNextOutputReading" auto-startup="true" >-->
         <!--<int:poller fixed-rate="2500" max-messages-per-poll="1"/>-->
