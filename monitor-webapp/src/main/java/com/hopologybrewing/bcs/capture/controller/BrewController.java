@@ -9,9 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class BrewController {
@@ -19,23 +17,14 @@ public class BrewController {
     private BrewService brewService;
 
     @RequestMapping("/brews")
-    public HttpEntity<List<BrewInfo>> getBrews() {
+    public HttpEntity<Map<String, Object>> getBrews() {
+        Map<String, Object> brewMap = new HashMap<>();
+
         List<BrewInfo> brews = brewService.getBrews();
-//        StringBuffer buffer = new StringBuffer("[");
-//
-//        Iterator<BrewInfo> itr = brews.iterator();
-//        while (itr.hasNext()) {
-//            buffer.append("\"").append(itr.next().getName()).append("\"");
-//
-//            if (itr.hasNext()) {
-//                buffer.append(",");
-//            }
-//        }
-//
-//        buffer.append("]");
-//
-//        return new HttpEntity<String>(buffer.toString());
-        return new HttpEntity<List<BrewInfo>>(brews);
+        brewMap.put("brews", brews);
+        brewMap.put("mostRecent", BrewInfo.getMostRecentBrewIndex(brews));
+
+        return new HttpEntity<Map<String, Object>>(brewMap);
     }
 
     @Autowired

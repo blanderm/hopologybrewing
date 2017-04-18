@@ -70,6 +70,8 @@ angular.module('hopologybrewing-bcs', [])
                         });
                     }
                 }
+
+            console.log($scope.activeProcesses.length);
             });
 
         $scope.convertTimerValue = function (value) {
@@ -205,7 +207,8 @@ angular.module('hopologybrewing-bcs', [])
     .controller('chartController', function ($scope, $http) {
         $http.get('/brews').
         then(function (response) {
-            $scope.brews = response.data;
+            $scope.brews = response.data.brews;
+            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
         });
 
         var chartOptions = {

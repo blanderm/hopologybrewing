@@ -279,18 +279,13 @@ public class DynamoDBService implements DbService {
         @Override
         public Date call() throws Exception {
             long latestBrewDate = 0L;
+
             List<BrewInfo> list = getAllBrews();
+            int index = BrewInfo.getMostRecentBrewIndex(list);
 
-            for (BrewInfo info : list) {
-                if (info.isCurrentBrew()) {
-                    latestBrewDate = info.getBrewDate();
-                    break;
-                } else if (latestBrewDate == 0L || info.getBrewDate() > latestBrewDate) {
-                    latestBrewDate = info.getBrewDate();
-                }
-            }
-
-            if (latestBrewDate == 0L) {
+            if (index >= 0) {
+                latestBrewDate = list.get(index).getBrewDate();
+            } else {
                 log.error("Couldn't find the latest brew date.  It's possible that there isn't any brew info in the db.");
             }
 

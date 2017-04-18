@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.hopologybrewing.bcs.capture.aws.dynamo.DynamoConstants;
 
 import java.util.Date;
+import java.util.List;
 
 @DynamoDBTable(tableName=DynamoConstants.BREW_INFO_TABLE)
 public class BrewInfo {
@@ -95,4 +96,27 @@ public class BrewInfo {
         this.lastUpdated = lastUpdated.getTime();
     }
 
+    /*
+        Returns -1 if m,ost recent can't be found
+     */
+    public static int getMostRecentBrewIndex(List<BrewInfo> list) {
+        int mostRecentIndex = -1;
+        long mostRecentBrewDate = 0L;
+
+        BrewInfo current = null;
+        for (int i = 0; i < list.size(); i++) {
+            current = list.get(i);
+
+            if (current.isCurrentBrew()) {
+                mostRecentIndex = i;
+                mostRecentBrewDate = current.getBrewDate();
+                break;
+            } else if (mostRecentIndex == -1 || current.getBrewDate() > mostRecentBrewDate) {
+                mostRecentIndex = i;
+                mostRecentBrewDate = current.getBrewDate();
+            }
+        }
+
+        return mostRecentIndex;
+    }
 }
