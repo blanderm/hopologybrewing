@@ -24,7 +24,6 @@ public class OutputMessageRecorder {
     private static final Logger historyLogger = LoggerFactory.getLogger("bcs-outputs-history");
     private OutputService outputService;
     private DbService dbService;
-    private DynamoDBService db = new DynamoDBService();
 
     public List<OutputRecording> getNextOutputReading() {
         Date date = new Date();
@@ -54,7 +53,7 @@ public class OutputMessageRecorder {
             }
 
             // put message in DynamoDB
-            db.saveReadings(recordings);
+            dbService.saveReadings(recordings);
         }
     }
 

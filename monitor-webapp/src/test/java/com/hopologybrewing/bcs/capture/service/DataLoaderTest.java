@@ -1,32 +1,30 @@
 package com.hopologybrewing.bcs.capture.service;
 
-import org.junit.Assert;
+import com.hopologybrewing.bcs.capture.batch.DataLoader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration("classpath:applicationContext.xml")
 @EnableAutoConfiguration
-public class TemperatureServiceTest {
-    private TemperatureService temperatureService;
+public class DataLoaderTest {
+    private DataLoader dataLoader;
 
     @Test
-    public void getProbeDataForBrew() throws Exception {
-        Map<String, List<List>> map = temperatureService.getProbeDataForBrew();
-        Assert.assertNotEquals("Data point size not 0", 0, map.size());
+    public void loadData() throws Exception {
+        dataLoader.loadData();
     }
 
     @Autowired
-    public void setTemperatureService(TemperatureService temperatureService) {
-        this.temperatureService = temperatureService;
+    public void setDataLoader(DataLoader dataLoader) {
+        this.dataLoader = dataLoader;
     }
 }

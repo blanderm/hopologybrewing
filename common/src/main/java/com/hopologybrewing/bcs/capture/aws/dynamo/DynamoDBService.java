@@ -234,7 +234,13 @@ public class DynamoDBService implements DbService {
 
                 // data should be the same so overwriting isn't a concern
                 timestamp = recording.getTimestamp();
-                brewDate = getCurrentBrewDate();
+
+                if (recording.getBrewDate() == null) {
+                    brewDate = getCurrentBrewDate();
+                } else {
+                    brewDate = recording.getBrewDate();
+                }
+
                 type = recording.getType();
             }
 

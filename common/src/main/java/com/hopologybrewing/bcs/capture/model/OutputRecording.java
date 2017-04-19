@@ -37,4 +37,8 @@ public class OutputRecording extends Recording {
     public String getType() {
         return OUTPUT_TYPE;
     }
+
+    public void setOutput(Output output) {
+        this.data = output;
+    }
 }

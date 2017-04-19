@@ -46,4 +46,8 @@ public class TemperatureProbeRecording extends Recording {
     public String getType() {
         return TEMPERATURE_TYPE;
     }
+
+    public void setProbe(TemperatureProbe probe) {
+        this.data = probe;
+    }
 }
