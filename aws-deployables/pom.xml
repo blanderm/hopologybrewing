@@ -36,37 +36,15 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>AWS Release Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/ext-release-local/</url>
-        </repository>
-        <repository>
-            <id>snapshots</id>
-            <name>AWS Snapshot Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/ext-snapshot-local</url>
-        </repository>
-    </repositories>
-
-    <!--<build>-->
-        <!--<extensions>-->
-            <!--<extension>-->
-                <!--<groupId>org.springframework.build</groupId>-->
-                <!--<artifactId>com.hopologybrewing.bcs.capture.aws-maven</artifactId>-->
-                <!--<version>5.0.0.RELEASE</version>-->
-            <!--</extension>-->
-        <!--</extensions>-->
-    <!--</build>-->
-
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <descriptor>src/assembly/zip.xml</descriptor>
-                    <!--<finalName>com.hopologybrewing.bcs.capture.aws-deployables-${project.version}</finalName>-->
+                    <descriptors>
+                        <descriptor>src/assembly/zip.xml</descriptor>
+                    </descriptors>
                 </configuration>
                 <executions>
                     <execution>
@@ -77,75 +55,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>-->
-                <!--<artifactId>maven-assembly-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<descriptorRefs>-->
-                        <!--<descriptorRef>jar-with-dependencies</descriptorRef>-->
-                    <!--</descriptorRefs>-->
-                <!--</configuration>-->
-                <!--<dependencies>-->
-                    <!--<dependency>-->
-                        <!--<groupId>com.hopologybrewing</groupId>-->
-                        <!--<artifactId>common</artifactId>-->
-                        <!--<version>1.0-SNAPSHOT</version>-->
-                        <!--<exclusions>-->
-                            <!--<exclusion>-->
-                                <!--<groupId>com.amazonaws</groupId>-->
-                                <!--<artifactId>com.hopologybrewing.bcs.capture.aws-java-sdk</artifactId>-->
-                            <!--</exclusion>-->
-                            <!--<exclusion>-->
-                                <!--<groupId>com.amazonaws</groupId>-->
-                                <!--<artifactId>com.hopologybrewing.bcs.capture.aws-lambda-java-core</artifactId>-->
-                            <!--</exclusion>-->
-                            <!--<exclusion>-->
-                                <!--<groupId>org.springframework</groupId>-->
-                                <!--<artifactId>spring-beans</artifactId>-->
-                            <!--</exclusion>-->
-
-                            <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.springframework/spring-web &ndash;&gt;-->
-                            <!--<exclusion>-->
-                                <!--<groupId>org.springframework</groupId>-->
-                                <!--<artifactId>spring-web</artifactId>-->
-                            <!--</exclusion>-->
-
-
-                            <!--&lt;!&ndash; https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core &ndash;&gt;-->
-                            <!--<exclusion>-->
-                                <!--<groupId>com.fasterxml.jackson.core</groupId>-->
-                                <!--<artifactId>jackson-core</artifactId>-->
-                            <!--</exclusion>-->
-
-                            <!--&lt;!&ndash; https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind &ndash;&gt;-->
-                            <!--<exclusion>-->
-                                <!--<groupId>com.fasterxml.jackson.core</groupId>-->
-                                <!--<artifactId>jackson-databind</artifactId>-->
-                            <!--</exclusion>-->
-
-                            <!--&lt;!&ndash; https://mvnrepository.com/artifact/commons-io/commons-io &ndash;&gt;-->
-                            <!--<exclusion>-->
-                                <!--<groupId>commons-io</groupId>-->
-                                <!--<artifactId>commons-io</artifactId>-->
-                            <!--</exclusion>-->
-
-                            <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.slf4j/slf4j-simple &ndash;&gt;-->
-                            <!--<exclusion>-->
-                                <!--<groupId>org.slf4j</groupId>-->
-                                <!--<artifactId>slf4j-simple</artifactId>-->
-                            <!--</exclusion>-->
-                        <!--</exclusions>-->
-                    <!--</dependency>-->
-                <!--</dependencies>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>make-assembly</id> &lt;!&ndash; this is used for inheritance merges &ndash;&gt;-->
-                        <!--<phase>package</phase> &lt;!&ndash; bind to the packaging phase &ndash;&gt;-->
-                        <!--<goals>-->
-                            <!--<goal>single</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
         </plugins>
     </build>
 </project>

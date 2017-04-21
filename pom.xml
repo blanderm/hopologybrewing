@@ -35,19 +35,6 @@
         </pluginManagement>
     </build>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>AWS Release Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/libs-release</url>
-        </repository>
-        <repository>
-            <id>snapshots</id>
-            <name>AWS Snapshot Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/libs-snapshot</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

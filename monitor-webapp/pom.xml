@@ -93,24 +93,6 @@
         </plugins>
     </build>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>AWS Release Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/libs-release</url>
-        </repository>
-        <repository>
-            <id>snapshots</id>
-            <name>AWS Snapshot Repository</name>
-            <url>https://artifactory.ddcplatform.dealer.com/artifactory/libs-snapshot</url>
-        </repository>
-        <repository>
-            <id>spring-releases</id>
-            <name>Spring Releases</name>
-            <url>https://repo.spring.io/libs-release</url>
-        </repository>
-    </repositories>
-
     <pluginRepositories>
         <pluginRepository>
             <id>spring-releases</id>
