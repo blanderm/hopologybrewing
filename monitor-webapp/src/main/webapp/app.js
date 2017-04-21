@@ -104,8 +104,8 @@ angular.module('hopologybrewing-bcs', [])
     })
 
     .controller('gaugeController', function ($scope, $http) {
-        $http.get('/temp').
-            then(function (response) {
+        $scope.generateOptions = function() {
+            $http.get('/temp').then(function (response) {
                 // find active process and get current state
                 $scope.gaugeOptions = [];
                 for (var i = 0; i < response.data.length; i++) {
@@ -195,13 +195,23 @@ angular.module('hopologybrewing-bcs', [])
                             },
                             series: response.data
                         };
-
-                        $scope.renderGauges = function(divId, options) {
-                            chart = $('#' + divId).highcharts(options);
-                        }
                     });
                 }
             });
+        };
+
+        $scope.generateOptions();
+        $scope.renderGauges = function(divId, options) {
+            chart = $('#' + divId).highcharts(options);
+        };
+
+        $scope.reloadGauges = function(divIds) {
+            $scope.generateOptions();
+
+            for (var i=0; i < divIds.length; i++) {
+                $scope.renderGauges(divIds[i], $scope.gaugeOptions[i]);
+            }
+        };
     })
 
     .controller('chartController', function ($scope, $http) {
@@ -247,6 +257,24 @@ angular.module('hopologybrewing-bcs', [])
                     },
                     pointInterval: 5000, // one hour
                     pointStart: Date.UTC(2016, 1, 12, 0, 0, 0)
+                },
+                scatter: {
+                    marker: {
+                        radius: 5,
+                        states: {
+                            hover: {
+                                enabled: true,
+                                lineColor: 'rgb(100,100,100)'
+                            }
+                        }
+                    },
+                    states: {
+                        hover: {
+                            marker: {
+                                enabled: false
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -260,8 +288,10 @@ angular.module('hopologybrewing-bcs', [])
 
             $http.get('/temp/history'.concat(pathVar)).
                 then(function (response) {
+                    chartOptions.chart.type ='';
                     chartOptions.title = "Temperature History";
                     chartOptions.yAxis = {
+                        title: { text: "Temperature (F)" },
                         softMin: 60,
                         softMax: 78,
                         startOnTick: false,
@@ -285,13 +315,22 @@ angular.module('hopologybrewing-bcs', [])
 
             $http.get('/output/history'.concat(pathVar)).
                 then(function (response) {
+                    chartOptions.chart.type ='scatter';
                     chartOptions.title = "Output History";
                     chartOptions.yAxis = {
+                        title: { text: "On/Off" },
                         softMin: 0,
                         softMax: 1,
-                        startOnTick: false,
+                        startOnTick: false
                     };
 
+                    chartOptions.tooltip = {
+                        crosshairs: true,
+                        formatter: function () {
+                            return '<b>' + Highcharts.dateFormat('%A, %b %e, %H:%M:%S.%L', this.x) + '</b>'
+                                + '<br/>' + this.series.name + ': ' + ((this.y == 1) ? 'ON' : 'OFF');
+                        }
+                    };
                     chartOptions.series =  response.data;
                     chart = $('#output-history').highcharts(chartOptions);
                 });

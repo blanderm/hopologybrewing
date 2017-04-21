@@ -13,26 +13,49 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class OutputMessageRecorder {
-    // {"output":{"name":"Pump - Left","on":true,"enabled":true},"timestamp":1484761482879}
-    //{"output":{"name":"Pump - Right","on":true,"enabled":true},"timestamp":1484761482879}
     private static final Logger log = LoggerFactory.getLogger(OutputMessageRecorder.class);
     private static final Logger historyLogger = LoggerFactory.getLogger("bcs-outputs-history");
     private OutputService outputService;
     private DbService dbService;
 
     public List<OutputRecording> getNextOutputReading() {
-        Date date = new Date();
-        List<Output> outputs = outputService.getEnabledOutputs();
         List<OutputRecording> recordings = new ArrayList<>();
 
-        if (outputs != null && !outputs.isEmpty()) {
-            for (Output output : outputs) {
-                recordings.add(new OutputRecording(output, date));
+        try {
+            // only record data if there is an active brew
+            if (dbService.getCurrentBrewDate() != null) {
+                Date date = new Date();
+                List<Output> outputs = outputService.getEnabledOutputs();
+
+                boolean atLeastOneOn = false;
+                if (outputs != null && !outputs.isEmpty()) {
+                    for (Output output : outputs) {
+                        if (output.isOn()) {
+                            atLeastOneOn = true;
+                        }
+
+                        recordings.add(new OutputRecording(output, date));
+                    }
+                }
+
+                // drop data if all outputs are off
+                if (!atLeastOneOn) {
+                    return new ArrayList<>();
+                }
+            }
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof UTFDataFormatException) {
+                // no need to fill up the log if there isn't an active brew
+                log.debug("There may not be an active brew or a failure occured determining the active brew.  Data will not be collected for this cycle", e);
+            } else {
+                log.error("Failed loading current brew date - ", e);
             }
         }
 

@@ -23,7 +23,16 @@ public class BrewService {
     private DbService dbService;
 
     public List<BrewInfo> getBrews() {
-        return dbService.getAllBrews();
+        List<BrewInfo> brews = null;
+
+        try {
+            brews = dbService.getAllBrews();
+        } catch (ExecutionException e) {
+            log.error("Failed loading all brews - ", e);
+            brews = new ArrayList<>();
+        }
+
+        return brews;
     }
 
     public void setDbService(DbService dbService) {

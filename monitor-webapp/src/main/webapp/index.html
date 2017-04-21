@@ -27,6 +27,7 @@
                     <div class="panel-body" style="display: inline-block;">
                         <div class="stack-left">
                             <div class="center" ng-controller="gaugeController">
+                                <div><a ng-click="reloadGauges()">Reload Temps</a></div>
                                  <span ng-repeat="options in gaugeOptions">
                                     <div id="{{'temp-gauge' + $index}}" class="gauge" style="display: inline-block;">{{ renderGauges('temp-gauge' + $index, options) }}</div>
                                  </span>

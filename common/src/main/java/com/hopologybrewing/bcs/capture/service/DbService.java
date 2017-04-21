@@ -19,7 +19,7 @@ public interface DbService {
 
     BrewInfo createBrew(BrewInfo newBrew) throws Exception;
 
-    List<BrewInfo> getAllBrews();
+    List<BrewInfo> getAllBrews() throws ExecutionException;
 
     List<Recording> findTemperatureReadings(Date brewDate);
 

@@ -12,9 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class TemperatureProbeMessageRecorder {
     private static final Logger log = LoggerFactory.getLogger(TemperatureProbeMessageRecorder.class);
@@ -23,14 +25,26 @@ public class TemperatureProbeMessageRecorder {
     private DbService dbService;
 
     public List<TemperatureProbeRecording> getNextTemperatureReading() {
-        Date date = new Date();
-        List<TemperatureProbe> probes = tempService.getEnabledProbes();
         List<TemperatureProbeRecording> recordings = new ArrayList<>();
 
-        if (probes != null && !probes.isEmpty()) {
+        try {
+            if (dbService.getCurrentBrewDate() != null) {
+                Date date = new Date();
+                List<TemperatureProbe> probes = tempService.getEnabledProbes();
 
-            for (TemperatureProbe probe : probes) {
-                recordings.add(new TemperatureProbeRecording(probe, date));
+                if (probes != null && !probes.isEmpty()) {
+
+                    for (TemperatureProbe probe : probes) {
+                        recordings.add(new TemperatureProbeRecording(probe, date));
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof UTFDataFormatException) {
+                // no need to fill up the log if there isn't an active brew
+                log.debug("There may not be an active brew or a failure occured determining the active brew.  Data will not be collected for this cycle", e);
+            } else {
+                log.error("Failed loading current brew date - ", e);
             }
         }
 

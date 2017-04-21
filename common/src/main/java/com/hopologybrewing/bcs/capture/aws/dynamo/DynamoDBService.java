@@ -18,6 +18,7 @@ import com.hopologybrewing.bcs.capture.service.DbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UTFDataFormatException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -30,18 +31,17 @@ import java.util.concurrent.TimeUnit;
 public class DynamoDBService implements DbService {
     private static final Logger log = LoggerFactory.getLogger(DynamoDBService.class);
     private static final Regions CURRENT_REGION = Regions.US_EAST_1;
+    private static final String BD_ALL_CACHE_KEY = "bd_all_cache_key";
     private static final String BD_CURR_CACHE_KEY = "bd_current_cache_key";
     private static final String BD_RECENT_CACHE_KEY = "bd_recent_cache_key";
     private static final Cache<String, Date> cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(24L, TimeUnit.HOURS)
+            .expireAfterWrite(30L, TimeUnit.DAYS)
+            .build();
+    private static final Cache<String, List<BrewInfo>> brewsCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(30L, TimeUnit.DAYS)
             .build();
 
-    // figure out how to query for data in a date range (timestamp)
-
-    // create brews for a beer that have a date range and then retrieve the data for that brew
-    // super lightweight, allows you to record data over time and associate data points with a brew through simple date range mapping (between query)
-
-    // create an interface that allows brew creation/initiation and edit
+    // todo: create an interface that allows brew creation/initiation and edit
 
     @Override
     public Date getCurrentBrewDate() throws ExecutionException {
@@ -51,6 +51,11 @@ public class DynamoDBService implements DbService {
     @Override
     public Date getMostRecentBrewDate() throws ExecutionException {
         return cache.get(BD_RECENT_CACHE_KEY, new MostRecentBrewDateCallable());
+    }
+
+    @Override
+    public List<BrewInfo> getAllBrews() throws ExecutionException {
+        return brewsCache.get(BD_ALL_CACHE_KEY, new AllBrewsCallable());
     }
 
     @Override
@@ -65,17 +70,9 @@ public class DynamoDBService implements DbService {
         // clear the currentBrewCache
         cache.put(BD_CURR_CACHE_KEY, new CurrentBrewDateCallable().call());
         cache.put(BD_RECENT_CACHE_KEY, new MostRecentBrewDateCallable().call());
+        brewsCache.put(BD_ALL_CACHE_KEY, new AllBrewsCallable().call());
 
         return newBrew;
-    }
-
-    @Override
-    public List<BrewInfo> getAllBrews() {
-        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
-        builder.withRegion(CURRENT_REGION);
-
-        DynamoDBMapper mapper = new DynamoDBMapper(builder.build());
-        return mapper.scan(BrewInfo.class, new DynamoDBScanExpression());
     }
 
     @Override
@@ -85,7 +82,7 @@ public class DynamoDBService implements DbService {
         Date timestamp;
         Output output;
         OutputRecording recording;
-        List<Recording> recordings = new ArrayList<>();
+        List<Recording> recordings = new LinkedList<>();
         for (Item item : findReadings(date, OutputRecording.OUTPUT_TYPE)) {
             timestamp = new Date(item.getLong("timestamp"));
             brewDate = new Date(item.getLong("brewDate"));
@@ -136,7 +133,7 @@ public class DynamoDBService implements DbService {
         Date timestamp;
         TemperatureProbe probe;
         TemperatureProbeRecording recording;
-        List<Recording> recordings = new ArrayList<>();
+        List<Recording> recordings = new LinkedList<>();
         for (Item item : findReadings(date, TemperatureProbeRecording.TEMPERATURE_TYPE)) {
             timestamp = new Date(item.getLong("timestamp"));
             brewDate = new Date(item.getLong("brewDate"));
@@ -192,15 +189,17 @@ public class DynamoDBService implements DbService {
         AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
         builder.withRegion(CURRENT_REGION);
         DynamoDB dynamoDB = new DynamoDB(builder.build());
-        Index index = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE).getIndex("brewDate-type-index");
+        Index index = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE).getIndex(DynamoConstants.BREWDATE_TIMESTAMP_INDEX);
 
         QuerySpec spec = new QuerySpec()
-                .withKeyConditionExpression("brewDate = :v_date and #t = :v_type")
+                .withKeyConditionExpression("brewDate = :v_date")
+                .withFilterExpression("#t = :v_type")
                 .withNameMap(new NameMap()
                         .with("#t", "type"))
                 .withValueMap(new ValueMap()
                         .withNumber(":v_date", date.getTime())
-                        .withString(":v_type", type));
+                        .withString(":v_type", type))
+                .withConsistentRead(false);
 
         return index.query(spec);
     }
@@ -274,7 +273,8 @@ public class DynamoDBService implements DbService {
             }
 
             if (latestBrewDate == null) {
-                log.error("Couldn't find the latest brew date.  It's possible that there isn't a brew fermenting right now.");
+                log.debug("Couldn't find the latest brew date.  It's possible that there isn't a brew fermenting right now.");
+                throw new UTFDataFormatException("Couldn't find the latest brew date.  It's possible that there isn't a brew fermenting right now.");
             }
 
             return latestBrewDate;
@@ -292,10 +292,22 @@ public class DynamoDBService implements DbService {
             if (index >= 0) {
                 latestBrewDate = list.get(index).getBrewDate();
             } else {
-                log.error("Couldn't find the latest brew date.  It's possible that there isn't any brew info in the db.");
+                log.debug("Couldn't find the most recent brew date.  It's possible that there isn't any brew info in the db.");
+                throw new UTFDataFormatException("Couldn't find the latest brew date.  It's possible that there isn't any brew info in the db.");
             }
 
             return new Date(latestBrewDate);
+        }
+    }
+
+    private class AllBrewsCallable implements Callable<List<BrewInfo>> {
+        @Override
+        public List<BrewInfo> call() throws Exception {
+            AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
+            builder.withRegion(CURRENT_REGION);
+
+            DynamoDBMapper mapper = new DynamoDBMapper(builder.build());
+            return mapper.scan(BrewInfo.class, new DynamoDBScanExpression());
         }
     }
 }
