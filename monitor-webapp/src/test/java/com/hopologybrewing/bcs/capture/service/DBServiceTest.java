@@ -17,6 +17,7 @@ import org.springframework.util.Assert;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -42,13 +43,17 @@ public class DBServiceTest {
     @Test
     public void createBrew() throws Exception {
         // prime cache
-        dbService.getCurrentBrewDate();
+        try {
+            dbService.getCurrentBrewDate();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
 
         BrewInfo brew = new BrewInfo();
-        brew.setName("NE IPA 1 - Mosaic");
-        brew.setDescription("First transition to a more wheat based IPA with a 4.0 SRM");
+        brew.setName("Beer Tester");
+        brew.setDescription("Testing");
 
-        brew.setBrewDate(1491177600000L);
+        brew.setBrewDate(new Date().getTime());
 
         dbService.createBrew(brew);
 
@@ -69,7 +74,7 @@ public class DBServiceTest {
 
     @Test
     public void findTempReadings() throws Exception {
-        Date brewDate = dbService.getCurrentBrewDate();
+        Date brewDate = dbService.getMostRecentBrewDate();
         List<Recording> recordings = dbService.findTemperatureReadings(brewDate);
         recordings = dbService.findOutputReadings(brewDate);
     }
