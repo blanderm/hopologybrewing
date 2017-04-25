@@ -157,9 +157,9 @@ public class DynamoDBService implements DbService {
                             case "setpoint":
                                 probe.setSetpoint(((BigDecimal) entry.getValue()).doubleValue());
                                 break;
-//                            case "resistance":
-//                                probe.setResistance(((BigDecimal) entry.getValue()).doubleValue());
-//                                break;
+                            case "resistance":
+                                probe.setResistance(((BigDecimal) entry.getValue()).doubleValue());
+                                break;
                             case "enabled":
                                 if (entry.getValue() instanceof String) {
                                     probe.setEnabled(Boolean.parseBoolean((String) entry.getValue()));
@@ -167,11 +167,11 @@ public class DynamoDBService implements DbService {
                                     probe.setEnabled((boolean) entry.getValue());
                                 }
                                 break;
-//                            case "coefficients":
-//                                for (BigDecimal coeff : (List<BigDecimal>) entry.getValue()) {
-//                                    probe.addCoefficient(coeff.doubleValue());
-//                                }
-//                                break;
+                            case "coefficients":
+                                for (BigDecimal coeff : (List<BigDecimal>) entry.getValue()) {
+                                    probe.addCoefficient(coeff.doubleValue());
+                                }
+                                break;
                         }
                     }
 
