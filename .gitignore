@@ -2,3 +2,4 @@ target
 *.iml
 .DS_Store
 .idea
+src/main/webapp/bower_components/
