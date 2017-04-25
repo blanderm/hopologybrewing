@@ -33,7 +33,6 @@ public class TemperatureProbeMessageRecorder {
                 List<TemperatureProbe> probes = tempService.getEnabledProbes();
 
                 if (probes != null && !probes.isEmpty()) {
-
                     for (TemperatureProbe probe : probes) {
                         recordings.add(new TemperatureProbeRecording(probe, date));
                     }

@@ -1,5 +1,6 @@
 package com.hopologybrewing.bcs.capture.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
@@ -13,8 +14,10 @@ public class TemperatureProbe {
     private String name;
     private double temp;
     private double setpoint;
+    @JsonIgnore
     private double resistance;
     private boolean enabled;
+    @JsonIgnore
     private List<Double> coefficients;
 
     public String getName() {

@@ -35,21 +35,26 @@ public class TemperatureController {
         return new HttpEntity<String>(buffer.toString());
     }
 
-    @RequestMapping("/temp/history")
-    public HttpEntity<String> getHistoricalTemps() {
-        return getHistoricalTemps(0L);
-    }
+//    @RequestMapping("/temp/history")
+//    public HttpEntity<String> getHistoricalTemps() {
+//        return getHistoricalTemps(0L);
+//    }
+//
+//    @RequestMapping("/temp/history/{date}")
+//    public HttpEntity<String> getHistoricalTemps(@PathVariable long date) {
+//        return getHistoricalTemps(date, 0L, 0L);
+//    }
 
     @RequestMapping("/temp/history/{date}")
-    public HttpEntity<String> getHistoricalTemps(@PathVariable long date) {
+    public HttpEntity<String> getHistoricalTemps(@PathVariable long date, @RequestParam(value="lowerRange") long lowerRange, @RequestParam(value="upperRange") long upperRange) {
         StringBuffer buffer = new StringBuffer();
         //todo: includes all points right now, change to query a range based on the beer profile (a.k.a. the brew)
         Map<String, List<List>> probesMap = null;
 
         if (date == 0L) {
-            probesMap = tempService.getProbeDataForBrew();
+            probesMap = tempService.getProbeDataForBrew(lowerRange, upperRange);
         } else {
-            probesMap = tempService.getProbeDataForBrew(new Date(date));
+            probesMap = tempService.getProbeDataForBrew(new Date(date), lowerRange, upperRange);
         }
 
         ObjectMapper mapper = new ObjectMapper();

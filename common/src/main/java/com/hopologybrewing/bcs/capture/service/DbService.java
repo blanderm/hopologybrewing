@@ -21,9 +21,9 @@ public interface DbService {
 
     List<BrewInfo> getAllBrews() throws ExecutionException;
 
-    List<Recording> findTemperatureReadings(Date brewDate);
+    List<Recording> findTemperatureReadings(Date brewDate, long lowerRange, long upperRange);
 
-    List<Recording> findOutputReadings(Date brewDate);
+    List<Recording> findOutputReadings(Date brewDate, long lowerRange, long upperRange);
 
     void saveReadings(List<Recording> message);
 }

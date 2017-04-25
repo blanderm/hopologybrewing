@@ -89,6 +89,14 @@
     padding-right: 42px;
 }
 
+.small-pad {
+    padding-top: 5  px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+
+}
+
 a {
     cursor:pointer;
 }

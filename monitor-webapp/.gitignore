@@ -3,3 +3,4 @@
 .idea
 target
 logs
+src/main/webapp/bower_components

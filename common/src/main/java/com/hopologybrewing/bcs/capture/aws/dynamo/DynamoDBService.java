@@ -76,14 +76,14 @@ public class DynamoDBService implements DbService {
     }
 
     @Override
-    public List<Recording> findOutputReadings(Date date) {
-        log.info("findOutputReadings : querying DyanmoDB for date " + date);
+    public List<Recording> findOutputReadings(Date date, long lowerRange, long upperRange) {
+        log.info("findOutputReadings : querying DyanmoDB for brew date " + date + " and range " + new Date(lowerRange) + " to " + new Date(upperRange));
         Date brewDate;
         Date timestamp;
         Output output;
         OutputRecording recording;
         List<Recording> recordings = new LinkedList<>();
-        for (Item item : findReadings(date, OutputRecording.OUTPUT_TYPE)) {
+        for (Item item : findReadings(date, OutputRecording.OUTPUT_TYPE, lowerRange, upperRange)) {
             timestamp = new Date(item.getLong("timestamp"));
             brewDate = new Date(item.getLong("brewDate"));
 
@@ -127,14 +127,14 @@ public class DynamoDBService implements DbService {
     }
 
     @Override
-    public List<Recording> findTemperatureReadings(Date date) {
-        log.info("findTemperatureReadings : querying DyanmoDB for date " + date);
+    public List<Recording> findTemperatureReadings(Date date, long lowerRange, long upperRange) {
+        log.info("findTemperatureReadings : querying DyanmoDB for brew date " + date + " and range " + new Date(lowerRange) + " to " + new Date(upperRange));
         Date brewDate;
         Date timestamp;
         TemperatureProbe probe;
         TemperatureProbeRecording recording;
         List<Recording> recordings = new LinkedList<>();
-        for (Item item : findReadings(date, TemperatureProbeRecording.TEMPERATURE_TYPE)) {
+        for (Item item : findReadings(date, TemperatureProbeRecording.TEMPERATURE_TYPE, lowerRange, upperRange)) {
             timestamp = new Date(item.getLong("timestamp"));
             brewDate = new Date(item.getLong("brewDate"));
 
@@ -157,9 +157,9 @@ public class DynamoDBService implements DbService {
                             case "setpoint":
                                 probe.setSetpoint(((BigDecimal) entry.getValue()).doubleValue());
                                 break;
-                            case "resistance":
-                                probe.setResistance(((BigDecimal) entry.getValue()).doubleValue());
-                                break;
+//                            case "resistance":
+//                                probe.setResistance(((BigDecimal) entry.getValue()).doubleValue());
+//                                break;
                             case "enabled":
                                 if (entry.getValue() instanceof String) {
                                     probe.setEnabled(Boolean.parseBoolean((String) entry.getValue()));
@@ -167,11 +167,11 @@ public class DynamoDBService implements DbService {
                                     probe.setEnabled((boolean) entry.getValue());
                                 }
                                 break;
-                            case "coefficients":
-                                for (BigDecimal coeff : (List<BigDecimal>) entry.getValue()) {
-                                    probe.addCoefficient(coeff.doubleValue());
-                                }
-                                break;
+//                            case "coefficients":
+//                                for (BigDecimal coeff : (List<BigDecimal>) entry.getValue()) {
+//                                    probe.addCoefficient(coeff.doubleValue());
+//                                }
+//                                break;
                         }
                     }
 
@@ -185,23 +185,26 @@ public class DynamoDBService implements DbService {
         return recordings;
     }
 
-    private ItemCollection<QueryOutcome> findReadings(Date date, String type) {
+    private ItemCollection<QueryOutcome> findReadings(Date date, String type, long lowerRange, long upperRange) {
         AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
         builder.withRegion(CURRENT_REGION);
         DynamoDB dynamoDB = new DynamoDB(builder.build());
-        Index index = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE).getIndex(DynamoConstants.BREWDATE_TIMESTAMP_INDEX);
+        Table table = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE);
 
         QuerySpec spec = new QuerySpec()
-                .withKeyConditionExpression("brewDate = :v_date")
-                .withFilterExpression("#t = :v_type")
+                .withKeyConditionExpression("#ts between :v_dateLower and :v_dateUpper and #t = :v_type")
+                .withFilterExpression("brewDate = :v_bDate")
                 .withNameMap(new NameMap()
+                        .with("#ts", "timestamp")
                         .with("#t", "type"))
                 .withValueMap(new ValueMap()
-                        .withNumber(":v_date", date.getTime())
-                        .withString(":v_type", type))
+                        .withNumber(":v_dateLower", lowerRange)
+                        .withNumber(":v_dateUpper", upperRange)
+                        .withString(":v_type", type)
+                        .withNumber(":v_bDate", date.getTime()))
                 .withConsistentRead(false);
 
-        return index.query(spec);
+        return table.query(spec);
     }
 
     @Override

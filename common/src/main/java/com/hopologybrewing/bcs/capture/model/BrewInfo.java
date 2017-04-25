@@ -14,6 +14,7 @@ public class BrewInfo {
     private String name;
     private long brewDate;
     private String description;
+    private long crashStart = 0L;
     private long fermentationComplete = 0L;
     private long lastUpdated;
 
@@ -96,9 +97,23 @@ public class BrewInfo {
         this.lastUpdated = lastUpdated.getTime();
     }
 
+    @DynamoDBAttribute(attributeName="crashStart")
+    public long getCrashStart() {
+        return crashStart;
+    }
+
+    public void setCrashStart(long crashStart) {
+        this.crashStart = crashStart;
+    }
+
+    @DynamoDBIgnore
+    public Date getCrashStartAsDate() {
+        return new Date(crashStart);
+    }
+
     /*
-        Returns -1 if m,ost recent can't be found
-     */
+            Returns -1 if m,ost recent can't be found
+         */
     public static int getMostRecentBrewIndex(List<BrewInfo> list) {
         int mostRecentIndex = -1;
         long mostRecentBrewDate = 0L;

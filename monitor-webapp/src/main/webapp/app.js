@@ -1,4 +1,4 @@
-angular.module('hopologybrewing-bcs', [])
+angular.module('hopologybrewing-bcs', ['daterangepicker'])
     .controller('logController', function ($scope, $http) {
         $scope.clearLog = function(type) {
             if (confirm("Are you sure you want to delete all data?") == true) {
@@ -219,6 +219,44 @@ angular.module('hopologybrewing-bcs', [])
         then(function (response) {
             $scope.brews = response.data.brews;
             $scope.selectedBrew = response.data.brews[response.data.mostRecent];
+
+            var startDate = null;
+            var endDate = null;
+            if ($scope.selectedBrew.fermentationComplete > 0) {
+                endDate = moment($scope.selectedBrew.fermentationComplete);
+                startDate = moment(endDate).subtract(2, 'days');
+            } else {
+                endDate = moment();
+                startDate = moment(endDate).subtract(2, 'days');
+            }
+
+            $scope.datePickerOptions = {
+                locale: {
+                    applyLabel: "Apply",
+                    fromLabel: "From",
+                    format: "MM-DD-YYYY",
+                    toLabel: "To",
+                    cancelLabel: 'Cancel',
+                    customRangeLabel: 'Custom range'
+                },
+                ranges: {
+                    'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
+                    'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
+                    'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
+                    'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
+                    'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
+                },
+                eventHandlers: {
+                    'apply.daterangepicker': function(ev, picker) {
+                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate.format("x"), $scope.datePicker.endDate.format("x"))
+                    }
+                }
+            };
+
+            $scope.dateMin =  $scope.selectedBrew.brewDate;
+            $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
+            $scope.datePicker = {startDate: startDate, endDate: endDate};
+            $scope.renderCharts($scope.selectedBrew.brewDate, startDate.format("x"), endDate.format("x"));
         });
 
         var chartOptions = {
@@ -228,12 +266,6 @@ angular.module('hopologybrewing-bcs', [])
 
             exporting: {
                 enabled: false
-            },
-
-            tooltip: {
-                shared: true,
-                crosshairs: true,
-                dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
             },
 
             xAxis: {
@@ -279,14 +311,31 @@ angular.module('hopologybrewing-bcs', [])
             }
         };
 
-        $scope.renderCharts = function(brewDate) {
+        $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
             var pathVar = '';
 
             if (brewDate > 0) {
                 pathVar = '/'.concat(brewDate)
             }
 
-            $http.get('/temp/history'.concat(pathVar)).
+            var rangeString = '';
+            if (lowerRange > 0) {
+                rangeString = rangeString.concat("lowerRange=").concat(lowerRange);
+            }
+
+            if (upperRange > 0) {
+                if (rangeString != '') {
+                    rangeString = rangeString.concat("&");
+                }
+
+                rangeString = rangeString.concat("upperRange=").concat(upperRange);
+            }
+
+            if (rangeString != '') {
+                rangeString = "?".concat(rangeString);
+            }
+
+            $http.get('/temp/history'.concat(pathVar).concat(rangeString)).
                 then(function (response) {
                     chartOptions.chart.type ='';
                     chartOptions.title = "Temperature History";
@@ -309,11 +358,17 @@ angular.module('hopologybrewing-bcs', [])
                         }]
                     };
 
+                    chartOptions.tooltip = {
+                        shared: true,
+                        crosshairs: true,
+                        dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
+                    };
+
                     chartOptions.series =  response.data;
                     chart = $('#temp-history').highcharts(chartOptions);
                 });
 
-            $http.get('/output/history'.concat(pathVar)).
+            $http.get('/output/history'.concat(pathVar).concat(rangeString)).
                 then(function (response) {
                     chartOptions.chart.type ='scatter';
                     chartOptions.title = "Output History";
@@ -335,7 +390,4 @@ angular.module('hopologybrewing-bcs', [])
                     chart = $('#output-history').highcharts(chartOptions);
                 });
         };
-
-        // render initially wihtout a date
-        $scope.renderCharts(0);
     });

@@ -85,7 +85,7 @@ public class OutputService extends BcsService {
         return outputsMap;
     }
 
-    public Map<String, List<List>> getProbeDataForBrew() {
+    public Map<String, List<List>> getProbeDataForBrew(long lowerRange, long upperRange) {
         Date date = null;
         try {
             date = dbService.getMostRecentBrewDate();
@@ -93,15 +93,15 @@ public class OutputService extends BcsService {
             log.error("Failed to find current brew date - ", e);
         }
 
-        return getProbeDataForBrew(date);
+        return getProbeDataForBrew(date, lowerRange, upperRange);
     }
 
-    public Map<String, List<List>> getProbeDataForBrew(Date brewDate) {
+    public Map<String, List<List>> getProbeDataForBrew(Date brewDate, long lowerRange, long upperRange) {
         List data = null;
         List<List> recordingDataList = null;
         OutputRecording outputRecording = null;
         Map<String, List<List>> outputsMap = new HashMap<>();
-        List<Recording> recordings = dbService.findOutputReadings(brewDate);
+        List<Recording> recordings = dbService.findOutputReadings(brewDate, lowerRange, upperRange);
 
         for (Recording recording : recordings) {
             if (recording instanceof OutputRecording) {
