@@ -35,16 +35,6 @@ public class TemperatureController {
         return new HttpEntity<String>(buffer.toString());
     }
 
-//    @RequestMapping("/temp/history")
-//    public HttpEntity<String> getHistoricalTemps() {
-//        return getHistoricalTemps(0L);
-//    }
-//
-//    @RequestMapping("/temp/history/{date}")
-//    public HttpEntity<String> getHistoricalTemps(@PathVariable long date) {
-//        return getHistoricalTemps(date, 0L, 0L);
-//    }
-
     @RequestMapping("/temp/history/{date}")
     public HttpEntity<String> getHistoricalTemps(@PathVariable long date, @RequestParam(value="lowerRange") long lowerRange, @RequestParam(value="upperRange") long upperRange) {
         StringBuffer buffer = new StringBuffer();

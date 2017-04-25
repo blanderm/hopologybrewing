@@ -33,11 +33,6 @@ public class OutputController {
         return new HttpEntity<List<Output>>(outputService.getEnabledOutputs());
     }
 
-//    @RequestMapping("/output/history")
-//    public HttpEntity<String> getHistoricalTemps() {
-//        return getHistoricalTemps(0L);
-//    }
-
     @RequestMapping("/output/history/{date}")
     public HttpEntity<String> getHistoricalOutputs(@PathVariable long date, @RequestParam(value="lowerRange") long lowerRange, @RequestParam(value="upperRange") long upperRange) {
         StringBuffer buffer = new StringBuffer();

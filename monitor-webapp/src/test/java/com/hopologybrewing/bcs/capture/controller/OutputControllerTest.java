@@ -11,6 +11,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,10 @@ public class OutputControllerTest {
     public void getProbeDataForBrew() throws Exception {
         OutputController controller = new OutputController();
         controller.setOutputService(outputService);
-        HttpEntity<String> response = controller.getHistoricalTemps(0L);
+        Date upper = new Date();
+        Date lower = new Date();
+        lower.setDate(lower.getDate() - 3);
+        HttpEntity<String> response = controller.getHistoricalOutputs(0L, lower.getTime(), upper.getTime());
         Assert.assertNotNull("Data point size not 0", response.getBody());
     }
 
