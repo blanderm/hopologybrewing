@@ -201,11 +201,13 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         $scope.generateOptions();
+        var divIds = [];
         $scope.renderGauges = function(divId, options) {
+            divIds.push(divId);
             chart = $('#' + divId).highcharts(options);
         };
 
-        $scope.reloadGauges = function(divIds) {
+        $scope.reloadGauges = function() {
             $scope.generateOptions();
 
             for (var i=0; i < divIds.length; i++) {
@@ -223,7 +225,8 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             var startDate = null;
             var endDate = null;
             if ($scope.selectedBrew.fermentationComplete > 0) {
-                endDate = moment($scope.selectedBrew.fermentationComplete);
+                // crash data points create a lot of load, avoid loading if the brew is complete and require an explicit load
+                endDate = moment($scope.selectedBrew.crashStart);
                 startDate = moment(endDate).subtract(2, 'days');
             } else {
                 endDate = moment();
