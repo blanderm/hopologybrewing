@@ -373,7 +373,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
             $http.get('/output/history'.concat(pathVar).concat(rangeString)).
                 then(function (response) {
-                    chartOptions.chart.type ='scatter';
+                    chartOptions.chart.type ='column';
                     chartOptions.title = "Output History";
                     chartOptions.yAxis = {
                         title: { text: "On/Off" },
