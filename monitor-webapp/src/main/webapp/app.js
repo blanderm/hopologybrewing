@@ -70,8 +70,6 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                         });
                     }
                 }
-
-            console.log($scope.activeProcesses.length);
             });
 
         $scope.convertTimerValue = function (value) {
@@ -292,24 +290,6 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                     },
                     pointInterval: 5000, // one hour
                     pointStart: Date.UTC(2016, 1, 12, 0, 0, 0)
-                },
-                scatter: {
-                    marker: {
-                        radius: 5,
-                        states: {
-                            hover: {
-                                enabled: true,
-                                lineColor: 'rgb(100,100,100)'
-                            }
-                        }
-                    },
-                    states: {
-                        hover: {
-                            marker: {
-                                enabled: false
-                            }
-                        }
-                    }
                 }
             }
         };
@@ -348,8 +328,8 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                         softMax: 78,
                         startOnTick: false,
                         plotBands: [{
-                            from: 65,
-                            to: 70,
+                            from: 64,
+                            to: 74,
                             color: 'rgba(68, 170, 213, 0.1)',
                             label: {
                                 text: 'Ale Range',
