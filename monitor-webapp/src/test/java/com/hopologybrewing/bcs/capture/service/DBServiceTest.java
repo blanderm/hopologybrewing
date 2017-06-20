@@ -75,11 +75,9 @@ public class DBServiceTest {
     @Test
     public void findTempReadings() throws Exception {
         Date brewDate = dbService.getMostRecentBrewDate();
-        Date upper = new Date();
-        Date lower = new Date();
-        lower.setDate(lower.getDate() - 3);
-        List<Recording> recordings = dbService.findTemperatureReadings(brewDate, lower.getTime(), upper.getTime());
-        recordings = dbService.findOutputReadings(brewDate, lower.getTime(), upper.getTime());
+        Date upper = new Date(1492127999000L);
+        List<Recording> recordings = dbService.findTemperatureReadings(brewDate, brewDate.getTime(), upper.getTime());
+        recordings = dbService.findOutputReadings(brewDate, brewDate.getTime(), upper.getTime());
     }
 
 
