@@ -231,6 +231,9 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 startDate = moment(endDate).subtract(2, 'days');
             }
 
+            // add a separate date picker for output and pumps
+            // pumps default to last 7 days
+            // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
             $scope.datePickerOptions = {
                 locale: {
                     applyLabel: "Apply",
@@ -294,6 +297,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             }
         };
 
+        // update to have different ranges for temp and outpus
         $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
             var pathVar = '';
 
