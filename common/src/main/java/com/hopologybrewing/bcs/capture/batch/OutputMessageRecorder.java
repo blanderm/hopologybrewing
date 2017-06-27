@@ -4,6 +4,7 @@ package com.hopologybrewing.bcs.capture.batch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hopologybrewing.bcs.capture.aws.dynamo.DynamoDBService;
+import com.hopologybrewing.bcs.capture.model.BrewInfo;
 import com.hopologybrewing.bcs.capture.model.Output;
 import com.hopologybrewing.bcs.capture.model.OutputRecording;
 import com.hopologybrewing.bcs.capture.model.Recording;
@@ -30,7 +31,8 @@ public class OutputMessageRecorder {
 
         try {
             // only record data if there is an active brew
-            if (dbService.getCurrentBrewDate() != null) {
+            BrewInfo info = dbService.getCurrentBrew();
+            if (info != null && info.getCrashStart() == 0L) {
                 Date date = new Date();
                 List<Output> outputs = outputService.getEnabledOutputs();
 
@@ -49,6 +51,8 @@ public class OutputMessageRecorder {
                 if (!atLeastOneOn) {
                     return new ArrayList<>();
                 }
+            } else {
+                log.info("There may not be an active brew or crashing has begun.  Data will not be collected for this cycle");
             }
         } catch (ExecutionException e) {
             if (e.getCause() instanceof UTFDataFormatException) {

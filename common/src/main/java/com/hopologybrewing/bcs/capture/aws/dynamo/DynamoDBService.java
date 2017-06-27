@@ -42,6 +42,17 @@ public class DynamoDBService implements DbService {
             .build();
 
     // todo: create an interface that allows brew creation/initiation and edit
+    @Override
+    public BrewInfo getCurrentBrew() throws ExecutionException {
+        List<BrewInfo> list = brewsCache.get(BD_CURR_CACHE_KEY, new CurrentBrewCallable());
+
+        BrewInfo info = null;
+        if (!list.isEmpty()) {
+            info = list.get(0);
+        }
+
+        return info;
+    }
 
     @Override
     public Date getCurrentBrewDate() throws ExecutionException {
@@ -262,8 +273,29 @@ public class DynamoDBService implements DbService {
         return item;
     }
 
-    private class CurrentBrewDateCallable implements Callable<Date> {
+    private class CurrentBrewCallable implements Callable<List<BrewInfo>> {
         @Override
+        public List<BrewInfo> call() throws Exception {
+            List<BrewInfo> latestBrew = new ArrayList<>();
+            List<BrewInfo> list = getAllBrews();
+
+            for (BrewInfo info : list) {
+                if (info.isCurrentBrew()) {
+                    latestBrew.add(info);
+                    break;
+                }
+            }
+
+            if (latestBrew.isEmpty()) {
+                log.debug("Couldn't find the latest brew.  It's possible that there isn't a brew fermenting right now.");
+                throw new UTFDataFormatException("Couldn't find the latest brew.  It's possible that there isn't a brew fermenting right now.");
+            }
+
+            return latestBrew;
+        }
+    }
+
+    private class CurrentBrewDateCallable implements Callable<Date> {
         public Date call() throws Exception {
             Date latestBrewDate = null;
             List<BrewInfo> list = getAllBrews();
