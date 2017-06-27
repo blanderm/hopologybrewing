@@ -4,3 +4,4 @@ target
 .idea
 src/main/webapp/bower_components/
 project.json
+infrastructure/terraform.tfstate*
