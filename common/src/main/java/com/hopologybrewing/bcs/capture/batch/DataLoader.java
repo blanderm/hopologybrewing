@@ -161,7 +161,7 @@ public class DataLoader {
             outputRecording = mapper.readValue(line, OutputRecording.class);
 
             if (outputRecording != null && outputRecording.getData() != null && outputRecording.getTimestamp().getTime() >= brew.getBrewDate()
-                    && (brew.getFermentationComplete() == 0 || outputRecording.getTimestamp().getTime() <= brew.getFermentationComplete())) {
+                    && (brew.getBrewCompleteDate() == 0 || outputRecording.getTimestamp().getTime() <= brew.getBrewCompleteDate())) {
 
                 // set brew date
                 outputRecording.setBrewDate(brew.getBrewDateAsDate());
@@ -199,7 +199,7 @@ public class DataLoader {
                         probeRecording = mapper.readValue(line, TemperatureProbeRecording.class);
 
                         if (probeRecording != null && probeRecording.getData() != null && probeRecording.getTimestamp().getTime() >= brew.getBrewDate()
-                                && (brew.getFermentationComplete() == 0 || probeRecording.getTimestamp().getTime() <= brew.getFermentationComplete())) {
+                                && (brew.getBrewCompleteDate() == 0 || probeRecording.getTimestamp().getTime() <= brew.getBrewCompleteDate())) {
                             // set brew date
                             probeRecording.setBrewDate(brew.getBrewDateAsDate());
 

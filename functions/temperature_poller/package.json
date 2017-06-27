@@ -1,0 +1,12 @@
+{
+  "name": "temperature_poller",
+  "version": "0.0.1",
+  "description": "A cloud watch triggered temperature poller that queries the BCS unit and persists the response in DynamoDB",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

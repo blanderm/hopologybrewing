@@ -32,6 +32,7 @@ public abstract class BcsService {
     static {
         Map<Type, String> url = new HashMap<>();
         url.put(Type.TEMP, BcsConstants.API_ROOT + "temp/%s");
+        url.put(Type.TEMPS, BcsConstants.API_ROOT + "temp");
         url.put(Type.PROCESS, BcsConstants.API_ROOT + "process/%s");
         url.put(Type.PROCESSES, BcsConstants.API_ROOT + "process");
         url.put(Type.STATE, BcsConstants.API_ROOT + "process/%s/state/%s");
@@ -137,5 +138,5 @@ public abstract class BcsService {
         }
     }
 
-    public enum Type {TEMP, PROCESS, PROCESSES, STATE, TIMER, OUTPUT, OUTPUTS, EXIT_CONDITIONS}
+    public enum Type {TEMP, TEMPS, PROCESS, PROCESSES, STATE, TIMER, OUTPUT, OUTPUTS, EXIT_CONDITIONS}
 }

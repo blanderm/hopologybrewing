@@ -13,7 +13,7 @@
     <modules>
         <module>common</module>
         <!--<module>com.hopologybrewing.bcs.capture.aws-deployables</module>-->
-        <module>monitor-webapp</module>
+        <module>webapp</module>
     </modules>
 
     <properties>

@@ -15,7 +15,7 @@ public class BrewInfo {
     private long brewDate;
     private String description;
     private long crashStart = 0L;
-    private long fermentationComplete = 0L;
+    private long brewCompleteDate = 0L;
     private long lastUpdated;
 
     @DynamoDBAttribute(attributeName="name")
@@ -45,13 +45,13 @@ public class BrewInfo {
         this.description = description;
     }
 
-    @DynamoDBAttribute(attributeName="fermentationComplete")
-    public long getFermentationComplete() {
-        return fermentationComplete;
+    @DynamoDBAttribute(attributeName="brewCompleteDate")
+    public long getBrewCompleteDate() {
+        return brewCompleteDate;
     }
 
-    public void setFermentationComplete(long fermentationComplete) {
-        this.fermentationComplete = fermentationComplete;
+    public void setBrewCompleteDate(long brewCompleteDate) {
+        this.brewCompleteDate = brewCompleteDate;
     }
 
 
@@ -67,7 +67,7 @@ public class BrewInfo {
     @DynamoDBIgnore
     public boolean isCurrentBrew() {
         long now = new Date().getTime();
-        return (fermentationComplete == 0L && now >= brewDate) || (now >= brewDate && now <= fermentationComplete);
+        return (brewCompleteDate == 0L && now >= brewDate) || (now >= brewDate && now <= brewCompleteDate);
     }
 
     @DynamoDBIgnore
@@ -81,11 +81,11 @@ public class BrewInfo {
 
     @DynamoDBIgnore
     public Date getFermentationCompleteAsDate() {
-        return new Date(fermentationComplete);
+        return new Date(brewCompleteDate);
     }
 
     public void setFermentationComplete(Date fermentationComplete) {
-        this.fermentationComplete = fermentationComplete.getTime();
+        this.brewCompleteDate = fermentationComplete.getTime();
     }
 
     @DynamoDBIgnore

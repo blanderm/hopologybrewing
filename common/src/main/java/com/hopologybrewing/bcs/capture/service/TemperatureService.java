@@ -22,7 +22,8 @@ public class TemperatureService extends BcsService {
     private String fileLocation;
     private DbService dbService;
 
-    public TemperatureService() {}
+    public TemperatureService() {
+    }
 
     public TemperatureService(String user, String pwd) {
         super(user, pwd);
@@ -148,23 +149,18 @@ public class TemperatureService extends BcsService {
     }
 
     public List<TemperatureProbe> getEnabledProbes() {
-        TemperatureProbe probe = null;
-        ResponseEntity<TemperatureProbe> response = null;
-        List<TemperatureProbe> probes = new ArrayList<TemperatureProbe>();
+        List<TemperatureProbe> enabledProbes = new ArrayList<TemperatureProbe>();
+        List probes = (List) super.getData(BcsService.Type.TEMPS);
 
-        try {
-            for (int i = 0; i < BcsConstants.TEMP_PROBE_COUNT; i++) {
-                probe = getProbe(String.valueOf(i));
-
-                if (probe != null && probe.isEnabled()) {
-                    probes.add(probe);
+        if (probes != null) {
+            for (int i = 0; i < probes.size(); i++) {
+                if (probes.get(i) != null) {
+                    enabledProbes.add(getProbe(String.valueOf(i)));
                 }
             }
-        } catch (Throwable t) {
-            log.error("Error getting temps - ", t);
         }
 
-        return probes;
+        return enabledProbes;
     }
 
     public TemperatureProbe getProbe(String probeId) {
