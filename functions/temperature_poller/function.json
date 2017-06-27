@@ -1,6 +1,5 @@
 {
   "handler": "index.handler",
   "memory": 512,
-  "timeout": 1,
-  "kms_arn": "arn:aws:kms:us-east-2:490474653742:key/91d6b3bf-bc48-4eb0-8b06-c9910d97ab46"
+  "timeout": 1
 }
