@@ -1,0 +1,8 @@
+{
+  "handler": "index.handler",
+  "environment": {
+    "BCS_IP": "XXX.XXX.XXX.XXX",
+    "USER": "SOME_USER",
+    "PWD": "SOME_PASSWORD"
+  }
+}
