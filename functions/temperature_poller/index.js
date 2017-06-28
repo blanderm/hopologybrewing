@@ -51,70 +51,83 @@ exports.handler = (event, context, callback) => {
 };
 
 function getActiveBrew(event, context, callback) {
-    processEvent(event, context, callback, 1497418200000);
-    // var brewDate = 0;
-    // dynamo.scan({TableName: "brew_info"}, function (err, resp) {
-    //     var response = err ? err.message : JSON.parse(JSON.stringify(resp));
-    //     console.log("Raw response from scan: " + JSON.stringify(response));
-    //
-    //     var now = new Date().getTime();
-    //     var item;
-    //     for (var i = 0; i < response.Items.length; i++) {
-    //         item = response.Items[i];
-    //         if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
-    //             brewDate = item.brew_date;
-    //             console.log("Brew date: " + item.brew_date);
-    //             processEvent(event, context, callback, brewDate);
-    //         }
-    //     }
-    // });
+    var brewDate = 0;
+    dynamo.scan({TableName: "brew_info"}, function (err, resp) {
+        var response = err ? err.message : JSON.parse(JSON.stringify(resp));
+        console.log("Raw response from scan: " + JSON.stringify(response));
+
+        var now = new Date().getTime();
+        var item;
+        for (var i = 0; i < response.Items.length; i++) {
+            item = response.Items[i];
+            if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
+                brewDate = item.brew_date;
+                console.log("Brew date: " + item.brew_date);
+                processEvent(event, context, callback, brewDate);
+                break;
+            }
+        }
+    });
 }
 
 function processEvent(event, context, callback, brewDate) {
-    // pass in url and table name?  What else?  Can one function handle both temp and output and then setup two schedulers at different intervals and different params?
-    // var data = JSON.parse(event.body);
-    // get data (output or temp
-    var request = http.request({
-            host: decryptedHost,
-            auth: decryptedUser + ':' + decryptedPwd,
-            path: '/api/temp/0',
-            port: '80',
-            method: 'GET'
-        },
-        function (response) {
-            console.log('STATUS: ' + response.statusCode);
-            console.log('HEADERS: ' + JSON.stringify(response.headers));
-            response.setEncoding('utf8');
-            var rawData = '';
-            response.on('data', function (chunk) {
-                rawData += chunk;
-                console.log("data: " + rawData);
-            });
+    var results = [];
+    var size = 2;
+    for (var i = 0; i < size; i++) {
+        var request = http.request({
+                host: decryptedHost,
+                auth: decryptedUser + ':' + decryptedPwd,
+                path: '/api/temp/' + i,
+                port: '80',
+                method: 'GET'
+            },
+            function (response) {
+                console.log('STATUS: ' + response.statusCode);
+                console.log('HEADERS: ' + JSON.stringify(response.headers));
+                response.setEncoding('utf8');
+                var rawData = '';
+                response.on('data', function (chunk) {
+                    rawData += chunk;
+                    console.log("data: " + rawData);
+                });
 
-            response.on('end', () => {
-                try {
+                response.on('end', () => {
                     var parsedData = JSON.parse(rawData);
-                    console.log("Data received from controller: " + parsedData);
-                    var params = {
-                        TableName: "brew_recordings",
-                        Item: {
-                            type: "temperature_recording",
-                            timestamp: new Date(),
-                            brewDate: brewDate,
-                            data: ""
-                        }
-                    };
-
-                    // dynamo.putItem(params, function (err, resp) {
-                    //     console.log(err ? err.message : JSON.stringify(resp));
-                    // });
-                } catch (e) {
-                    console.log(e.message);
-                }
+                    results.push(parsedData);
+                    console.log("Data received from controller: " + JSON.stringify(parsedData));
+                    console.log("Results: " + JSON.stringify(results));
+                    recordReadings(results, size, brewDate);
+                });
             });
-        });
 
-    request.end();
+        request.end();
+    }
 
     callback(null, "Completed temp reading capture.");
+}
+
+function recordReadings(results, size, brewDate) {
+    if (results.length === size) {
+        var data = JSON.parse("{}");
+        results.forEach(function(item) {
+            data[item.name] = item;
+        });
+
+        var params = {
+            TableName: "brew_recordings",
+            Item: {
+                type: "temperature_recording",
+                timestamp: new Date().getTime(),
+                brew_date: brewDate,
+                data: data
+            }
+        };
+
+        var paramsStr = JSON.stringify(params);
+        console.log("Params to persist: " + paramsStr);
+        dynamo.putItem(params, function (err, resp) {
+            var respMsg = err ? err.message : "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+            console.log(respMsg);
+        });
+    }
 }

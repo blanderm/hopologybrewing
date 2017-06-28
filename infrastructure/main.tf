@@ -5,14 +5,40 @@ provider "aws" {
 
 data "aws_caller_identity" "current" { }
 
+resource "aws_iam_role" "lambda_role" {
+  name = "hopologybrewing-lambda"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_iam_role" "lambda_role" {
+  role_name = "hopologybrewing-lambda"
+  depends_on = ["aws_iam_role.lambda_role"]
+}
+
 resource "aws_iam_role_policy_attachment" "cloudwatch_policy_attach" {
-  role = "${basename(var.apex_function_role)}"
+  role = "${data.aws_iam_role.lambda_role.role_name}"
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  depends_on = ["aws_iam_role.lambda_role"]
 }
 
 resource "aws_iam_role_policy_attachment" "dynamo_policy_attach" {
-  role = "${basename(var.apex_function_role)}"
+  role = "${data.aws_iam_role.lambda_role.role_name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+  depends_on = ["aws_iam_role.lambda_role"]
 }
 
 resource "aws_kms_key" "hopologybrewing-key" {
@@ -60,7 +86,7 @@ resource "aws_kms_key" "hopologybrewing-key" {
         "Effect": "Allow",
         "Principal": {
           "AWS": [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${basename(var.apex_function_role)}",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${data.aws_iam_role.lambda_role.role_name}",
             "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${basename(data.aws_caller_identity.current.arn)}"
           ]
         },
@@ -78,7 +104,7 @@ resource "aws_kms_key" "hopologybrewing-key" {
         "Effect": "Allow",
         "Principal": {
           "AWS": [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${basename(var.apex_function_role)}",
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${data.aws_iam_role.lambda_role.role_name}",
             "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${basename(data.aws_caller_identity.current.arn)}"
           ]
         },
@@ -103,11 +129,14 @@ resource "aws_kms_key" "hopologybrewing-key" {
     creator = "Bryan Landerman"
     purpose = "Key used for sensitive info related to the hoplogybrewing brewery controller"
   }
+
+  depends_on = ["aws_iam_role.lambda_role"]
 }
 
 resource "aws_kms_alias" "hopologybrewing-key" {
   name          = "alias/hopologybrewing-key"
   target_key_id = "${aws_kms_key.hopologybrewing-key.key_id}"
+  depends_on = ["aws_kms_key.hopologybrewing-key"]
 }
 
 // DynamoDB resources

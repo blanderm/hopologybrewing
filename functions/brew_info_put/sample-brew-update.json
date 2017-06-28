@@ -1,0 +1,15 @@
+{
+  "brewDate": 1498681238513,
+  "description": "Test batch",
+  "name": "Test Batch",
+  "additionalAttributes" : [
+    {
+      "name" : "brew_complete_date",
+      "value": 1498681238513
+    },
+    {
+      "name" : "crash_start",
+      "value": 1498681238513
+    }
+  ]
+}

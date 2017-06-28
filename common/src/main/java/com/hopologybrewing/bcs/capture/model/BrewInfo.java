@@ -27,7 +27,7 @@ public class BrewInfo {
         this.name = name;
     }
 
-    @DynamoDBHashKey(attributeName="brewDate")
+    @DynamoDBHashKey(attributeName="brew_date")
     public long getBrewDate() {
         return brewDate;
     }
@@ -45,7 +45,7 @@ public class BrewInfo {
         this.description = description;
     }
 
-    @DynamoDBAttribute(attributeName="brewCompleteDate")
+    @DynamoDBAttribute(attributeName="brew_completion_date")
     public long getBrewCompleteDate() {
         return brewCompleteDate;
     }
@@ -55,7 +55,7 @@ public class BrewInfo {
     }
 
 
-    @DynamoDBAttribute(attributeName="lastUpdated")
+    @DynamoDBAttribute(attributeName="last_updated")
     public long getLastUpdated() {
         return lastUpdated;
     }
@@ -80,11 +80,11 @@ public class BrewInfo {
     }
 
     @DynamoDBIgnore
-    public Date getFermentationCompleteAsDate() {
+    public Date getBrewCompleteDateAsDate() {
         return new Date(brewCompleteDate);
     }
 
-    public void setFermentationComplete(Date fermentationComplete) {
+    public void setBrewCompleteDate(Date fermentationComplete) {
         this.brewCompleteDate = fermentationComplete.getTime();
     }
 
@@ -97,7 +97,7 @@ public class BrewInfo {
         this.lastUpdated = lastUpdated.getTime();
     }
 
-    @DynamoDBAttribute(attributeName="crashStart")
+    @DynamoDBAttribute(attributeName="crash_start")
     public long getCrashStart() {
         return crashStart;
     }
