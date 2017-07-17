@@ -13,6 +13,9 @@ import java.util.concurrent.ExecutionException;
  */
 public interface DbService {
 
+    // todo: create an interface that allows brew creation/initiation and edit
+    BrewInfo getCurrentBrew() throws ExecutionException;
+
     Date getCurrentBrewDate() throws ExecutionException;
 
     Date getMostRecentBrewDate() throws ExecutionException;
