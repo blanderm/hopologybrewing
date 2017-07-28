@@ -224,7 +224,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             var endDate = null;
             if ($scope.selectedBrew.fermentationComplete > 0) {
                 // crash data points create a lot of load, avoid loading if the brew is complete and require an explicit load
-                endDate = moment($scope.selectedBrew.crashStart);
+                endDate = moment($scope.selectedBrew.fermentationComplete);
                 startDate = moment(endDate).subtract(2, 'days');
             } else {
                 endDate = moment();

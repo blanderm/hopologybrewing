@@ -9,7 +9,7 @@ These instructions will get you a copy of the project up and running in your AWS
 ### Prerequisites
 
 In order to run this project, you'll need to have some experience building applications in Java and node.js and using the unix command line. Experience with using AWS to develop applications is also important, as well as understanding serverless computing, no-sql databases and spring.
-
+    
 What things you need to install the software and how to install them
 
 *  AWS Account - You can get one for free
