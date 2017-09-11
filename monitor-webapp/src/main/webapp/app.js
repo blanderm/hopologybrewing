@@ -223,6 +223,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 var endDate = null;
 
                 if ($scope.selectedBrew == null) {
+                    alert("Selected brew not set");
                     $scope.selectedBrew = response.data.brews[response.data.mostRecent];
 
                     if ($scope.selectedBrew.fermentationComplete > 0) {
@@ -237,6 +238,8 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                     startDate = moment(lowerRange);
                     endDate = moment(upperRange);
                 }
+
+                alert("Start Date: " + startDate + " End Date: " + endDate);
 
                 $scope.dateMin = $scope.selectedBrew.brewDate;
                 $scope.dateMax = ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
