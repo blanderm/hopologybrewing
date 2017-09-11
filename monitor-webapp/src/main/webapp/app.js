@@ -26,51 +26,51 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
     .controller('outputController', function ($scope, $http) {
         $http.get('/output').
-        then(function (response) {
-            $scope.outputs = response.data;
-        });
+            then(function (response) {
+                $scope.outputs = response.data;
+            });
     })
 
     .controller('processController', function ($scope, $http) {
         $http.get('/process').
-        then(function (response) {
-            // find active process and get current state
-            if (response.data != null) {
-                $scope.processes = response.data;
-            }
-        })
+            then(function (response) {
+                // find active process and get current state
+                if (response.data != null) {
+                    $scope.processes = response.data;
+                }
+            })
     })
 
     .controller('currentStateController', function ($scope, $http) {
         $http.get('/process/status').
-        then(function (response) {
-            // find active process and get current state
-            if (response.data != null) {
-                var enabledProcesses = [];
-                $scope.activeProcesses = [];
+            then(function (response) {
+                // find active process and get current state
+                if (response.data != null) {
+                    var enabledProcesses = [];
+                    $scope.activeProcesses = [];
 
-                for (var i = 0; i < response.data.length; i++) {
-                    if (response.data[i]) {
-                        enabledProcesses.push(i);
+                    for (var i = 0; i < response.data.length; i++) {
+                        if (response.data[i]) {
+                            enabledProcesses.push(i);
+                        }
+                    }
+
+                    for (var j = 0; j < enabledProcesses.length; j++) {
+                        $http.get('/process/'.concat(enabledProcesses[j]).concat('/current_state')).
+                        then(function (processStateResponse) {
+                            var exitConditions = processStateResponse.data.statesObj[processStateResponse.data.current_state.state].exitConditions;
+
+                            if (exitConditions != null) {
+                                for (var k = 0; k < exitConditions.length; k++) {
+                                    processStateResponse.data.nextState = processStateResponse.data.states[exitConditions[k].next_state];
+                                }
+                            }
+
+                            $scope.activeProcesses.push(processStateResponse.data);
+                        });
                     }
                 }
-
-                for (var j = 0; j < enabledProcesses.length; j++) {
-                    $http.get('/process/'.concat(enabledProcesses[j]).concat('/current_state')).
-                    then(function (processStateResponse) {
-                        var exitConditions = processStateResponse.data.statesObj[processStateResponse.data.current_state.state].exitConditions;
-
-                        if (exitConditions != null) {
-                            for (var k = 0; k < exitConditions.length; k++) {
-                                processStateResponse.data.nextState = processStateResponse.data.states[exitConditions[k].next_state];
-                            }
-                        }
-
-                        $scope.activeProcesses.push(processStateResponse.data);
-                    });
-                }
-            }
-        });
+            });
 
         $scope.convertTimerValue = function (value) {
             // days
@@ -215,70 +215,53 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
     })
 
     .controller('chartController', function ($scope, $http) {
-        $scope.renderCharts = function (brewDate, lowerRange, upperRange) {
-            $http.get('/brews').then(function (response) {
-                $scope.brews = response.data.brews;
+        $http.get('/brews').
+        then(function (response) {
+            $scope.brews = response.data.brews;
+            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
 
-                var startDate = null;
-                var endDate = null;
+            var startDate = null;
+            var endDate = null;
+            if ($scope.selectedBrew.fermentationComplete > 0) {
+                // if brew is complete, load all data
+                endDate = moment($scope.selectedBrew.fermentationComplete);
+                startDate = moment($scope.selectedBrew.brewDate);
+            } else {
+                endDate = moment();
+                startDate = moment(endDate).subtract(2, 'days');
+            }
 
-                if ($scope.selectedBrew === undefined) {
-                    console.log("Selected brew not set");
-                    $scope.selectedBrew = response.data.brews[response.data.mostRecent];
-
-                    if ($scope.selectedBrew.fermentationComplete > 0) {
-                        // if brew is complete, load all data
-                        endDate = moment($scope.selectedBrew.fermentationComplete);
-                        startDate = moment($scope.selectedBrew.brewDate);
-                    } else {
-                        endDate = moment();
-                        startDate = moment(endDate).subtract(2, 'days');
+            // add a separate date picker for output and pumps
+            // pumps default to last 7 days
+            // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
+            $scope.datePickerOptions = {
+                locale: {
+                    applyLabel: "Apply",
+                    fromLabel: "From",
+                    format: "MM-DD-YYYY",
+                    toLabel: "To",
+                    cancelLabel: 'Cancel',
+                    customRangeLabel: 'Custom range'
+                },
+                ranges: {
+                    'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
+                    'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
+                    'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
+                    'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
+                    'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
+                },
+                eventHandlers: {
+                    'apply.daterangepicker': function(ev, picker) {
+                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate.format("x"), $scope.datePicker.endDate.format("x"))
                     }
-                } else {
-                    startDate = moment(lowerRange);
-                    endDate = moment(upperRange);
                 }
+            };
 
-                console.log("Start Date: " + startDate + " End Date: " + endDate);
-
-                $scope.dateMin = $scope.selectedBrew.brewDate;
-                $scope.dateMax = ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
-                $scope.datePicker = {startDate: startDate, endDate: endDate};
-
-                // add a separate date picker for output and pumps
-                // pumps default to last 7 days
-                // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
-                $scope.datePickerOptions = {
-                    locale: {
-                        applyLabel: "Apply",
-                        fromLabel: "From",
-                        format: "MM-DD-YYYY",
-                        toLabel: "To",
-                        cancelLabel: 'Cancel',
-                        customRangeLabel: 'Custom range'
-                    },
-                    ranges: {
-                        'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
-                        'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
-                        'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
-                        'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
-                        'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
-                    },
-                    eventHandlers: {
-                        'apply.daterangepicker': function (ev, picker) {
-                            $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
-                        }
-                    }
-                };
-
-                $scope.createCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
-            });
-        };
-
-        // render initial chart
-        if ($scope.selectedBrew === undefined) {
-            $scope.renderCharts(null, null, null);
-        }
+            $scope.dateMin =  $scope.selectedBrew.brewDate;
+            $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
+            $scope.datePicker = {startDate: startDate, endDate: endDate};
+            $scope.renderCharts($scope.selectedBrew.brewDate, startDate.format("x"), endDate.format("x"));
+        });
 
         var chartOptions = {
             chart: {
@@ -315,10 +298,8 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         // update to have different ranges for temp and outpus
-        $scope.createCharts = function(brewDate, lowerRange, upperRange) {
+        $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
             var pathVar = '';
-            lowerRange = moment(lowerRange).format("x");
-            upperRange = moment(upperRange).format("x");
 
             if (brewDate > 0) {
                 pathVar = '/'.concat(brewDate)
@@ -342,58 +323,58 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             }
 
             $http.get('/temp/history'.concat(pathVar).concat(rangeString)).
-            then(function (response) {
-                chartOptions.chart.type ='';
-                chartOptions.title = "Temperature History";
-                chartOptions.yAxis = {
-                    title: { text: "Temperature (F)" },
-                    softMin: 60,
-                    softMax: 78,
-                    startOnTick: false,
-                    plotBands: [{
-                        from: 64,
-                        to: 74,
-                        color: 'rgba(68, 170, 213, 0.1)',
-                        label: {
-                            text: 'Ale Range',
-                            style: {
-                                color: '#606060'
-                            },
-                            textAlign: 'left'
-                        }
-                    }]
-                };
+                then(function (response) {
+                    chartOptions.chart.type ='';
+                    chartOptions.title = "Temperature History";
+                    chartOptions.yAxis = {
+                        title: { text: "Temperature (F)" },
+                        softMin: 60,
+                        softMax: 78,
+                        startOnTick: false,
+                        plotBands: [{
+                            from: 64,
+                            to: 74,
+                            color: 'rgba(68, 170, 213, 0.1)',
+                            label: {
+                                text: 'Ale Range',
+                                style: {
+                                    color: '#606060'
+                                },
+                                textAlign: 'left'
+                            }
+                        }]
+                    };
 
-                chartOptions.tooltip = {
-                    shared: true,
-                    crosshairs: true,
-                    dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
-                };
+                    chartOptions.tooltip = {
+                        shared: true,
+                        crosshairs: true,
+                        dateTimeLabelFormats: '%A, %b %e, %H:%M:%S.%L'
+                    };
 
-                chartOptions.series =  response.data;
-                chart = $('#temp-history').highcharts(chartOptions);
-            });
+                    chartOptions.series =  response.data;
+                    chart = $('#temp-history').highcharts(chartOptions);
+                });
 
             $http.get('/output/history'.concat(pathVar).concat(rangeString)).
-            then(function (response) {
-                chartOptions.chart.type ='column';
-                chartOptions.title = "Output History";
-                chartOptions.yAxis = {
-                    title: { text: "On/Off" },
-                    softMin: 0,
-                    softMax: 1,
-                    startOnTick: false
-                };
+                then(function (response) {
+                    chartOptions.chart.type ='column';
+                    chartOptions.title = "Output History";
+                    chartOptions.yAxis = {
+                        title: { text: "On/Off" },
+                        softMin: 0,
+                        softMax: 1,
+                        startOnTick: false
+                    };
 
-                chartOptions.tooltip = {
-                    crosshairs: true,
-                    formatter: function () {
-                        return '<b>' + Highcharts.dateFormat('%A, %b %e, %H:%M:%S.%L', this.x) + '</b>'
-                            + '<br/>' + this.series.name + ': ' + ((this.y == 1) ? 'ON' : 'OFF');
-                    }
-                };
-                chartOptions.series =  response.data;
-                chart = $('#output-history').highcharts(chartOptions);
-            });
+                    chartOptions.tooltip = {
+                        crosshairs: true,
+                        formatter: function () {
+                            return '<b>' + Highcharts.dateFormat('%A, %b %e, %H:%M:%S.%L', this.x) + '</b>'
+                                + '<br/>' + this.series.name + ': ' + ((this.y == 1) ? 'ON' : 'OFF');
+                        }
+                    };
+                    chartOptions.series =  response.data;
+                    chart = $('#output-history').highcharts(chartOptions);
+                });
         };
     });
