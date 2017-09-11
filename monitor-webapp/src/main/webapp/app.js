@@ -275,6 +275,9 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             });
         };
 
+        // render initial chart
+        $scope.renderCharts();
+
         var chartOptions = {
             chart: {
                 zoomType: 'x'
