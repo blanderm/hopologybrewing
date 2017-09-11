@@ -252,7 +252,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 },
                 eventHandlers: {
                     'apply.daterangepicker': function(ev, picker) {
-                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate.format("x"), $scope.datePicker.endDate.format("x"))
+                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
                     }
                 }
             };
@@ -260,7 +260,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             $scope.dateMin =  $scope.selectedBrew.brewDate;
             $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
             $scope.datePicker = {startDate: startDate, endDate: endDate};
-            $scope.renderCharts($scope.selectedBrew.brewDate, startDate.format("x"), endDate.format("x"));
+            $scope.renderCharts($scope.selectedBrew.brewDate, startDate, endDate);
         });
 
         var chartOptions = {
@@ -300,6 +300,9 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         // update to have different ranges for temp and outpus
         $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
             var pathVar = '';
+
+            lowerRange = moment(lowerRange).format("x");
+            upperRange = moment(upperRange).format("x");
 
             if (brewDate > 0) {
                 pathVar = '/'.concat(brewDate)
