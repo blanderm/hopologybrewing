@@ -215,11 +215,62 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
     })
 
     .controller('chartController', function ($scope, $http) {
-        $http.get('/brews').then(function (response) {
-            $scope.brews = response.data.brews;
-            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
-            $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
-        });
+        $scope.renderCharts() = function(brewDate, lowerRange, upperRange) {
+            $http.get('/brews').then(function (response) {
+                $scope.brews = response.data.brews;
+
+                var startDate = null;
+                var endDate = null;
+
+                if ($scope.selectedBrew == null) {
+                    $scope.selectedBrew = response.data.brews[response.data.mostRecent];
+
+                    if ($scope.selectedBrew.fermentationComplete > 0) {
+                        // if brew is complete, load all data
+                        endDate = moment($scope.selectedBrew.fermentationComplete);
+                        startDate = moment($scope.selectedBrew.brewDate);
+                    } else {
+                        endDate = moment();
+                        startDate = moment(endDate).subtract(2, 'days');
+                    }
+                } else {
+                    startDate = moment(lowerRange);
+                    endDate = moment(upperRange);
+                }
+
+                $scope.dateMin = $scope.selectedBrew.brewDate;
+                $scope.dateMax = ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
+                $scope.datePicker = {startDate: startDate, endDate: endDate};
+
+                // add a separate date picker for output and pumps
+                // pumps default to last 7 days
+                // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
+                $scope.datePickerOptions = {
+                    locale: {
+                        applyLabel: "Apply",
+                        fromLabel: "From",
+                        format: "MM-DD-YYYY",
+                        toLabel: "To",
+                        cancelLabel: 'Cancel',
+                        customRangeLabel: 'Custom range'
+                    },
+                    ranges: {
+                        'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
+                        'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
+                        'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
+                        'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
+                        'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
+                    },
+                    eventHandlers: {
+                        'apply.daterangepicker': function (ev, picker) {
+                            $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
+                        }
+                    }
+                };
+
+                $scope.createCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
+            });
+        };
 
         var chartOptions = {
             chart: {
@@ -256,57 +307,10 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         // update to have different ranges for temp and outpus
-        $scope.renderDatePicker = function() {
-            var startDate = null;
-            var endDate = null;
-            if ($scope.selectedBrew.fermentationComplete > 0) {
-                // if brew is complete, load all data
-                endDate = moment($scope.selectedBrew.fermentationComplete);
-                startDate = moment($scope.selectedBrew.brewDate);
-            } else {
-                endDate = moment();
-                startDate = moment(endDate).subtract(2, 'days');
-            }
-
-            $scope.dateMin = $scope.selectedBrew.brewDate;
-            $scope.dateMax = ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
-            $scope.datePicker = {startDate: startDate, endDate: endDate};
-
-            // add a separate date picker for output and pumps
-            // pumps default to last 7 days
-            // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
-            $scope.datePickerOptions = {
-                locale: {
-                    applyLabel: "Apply",
-                    fromLabel: "From",
-                    format: "MM-DD-YYYY",
-                    toLabel: "To",
-                    cancelLabel: 'Cancel',
-                    customRangeLabel: 'Custom range'
-                },
-                ranges: {
-                    'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
-                    'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
-                    'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
-                    'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
-                    'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
-                },
-                eventHandlers: {
-                    'apply.daterangepicker': function (ev, picker) {
-                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
-                    }
-                }
-            };
-
-            return datePicker;
-        };
-
-        // update to have different ranges for temp and outpus
-        $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
-            var datePicker = renderDatePicker();
+        $scope.createCharts = function(brewDate, lowerRange, upperRange) {
             var pathVar = '';
-            lowerRange = moment(datePicker.startDate).format("x");
-            upperRange = moment(datePicker.endDate).format("x");
+            lowerRange = moment(lowerRange).format("x");
+            upperRange = moment(upperRange).format("x");
 
             if (brewDate > 0) {
                 pathVar = '/'.concat(brewDate)
