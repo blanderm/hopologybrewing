@@ -231,6 +231,10 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 startDate = moment(endDate).subtract(2, 'days');
             }
 
+            $scope.dateMin =  $scope.selectedBrew.brewDate;
+            $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
+            $scope.datePicker = {startDate: startDate, endDate: endDate};
+
             // add a separate date picker for output and pumps
             // pumps default to last 7 days
             // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
@@ -257,10 +261,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 }
             };
 
-            $scope.dateMin =  $scope.selectedBrew.brewDate;
-            $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
-            $scope.datePicker = {startDate: startDate, endDate: endDate};
-            $scope.renderCharts($scope.selectedBrew.brewDate, startDate, endDate);
+            $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
         });
 
         var chartOptions = {
