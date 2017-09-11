@@ -222,7 +222,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 var startDate = null;
                 var endDate = null;
 
-                if ($scope.selectedBrew == null) {
+                if ($scope.selectedBrew === undefined) {
                     console.log("Selected brew not set");
                     $scope.selectedBrew = response.data.brews[response.data.mostRecent];
 
@@ -276,7 +276,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         // render initial chart
-        if ($scope.selectedBrew == null) {
+        if ($scope.selectedBrew === undefined) {
             $scope.renderCharts(null, null, null);
         }
 
