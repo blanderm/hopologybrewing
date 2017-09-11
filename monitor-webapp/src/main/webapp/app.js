@@ -216,6 +216,8 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
     .controller('chartController', function ($scope, $http) {
         $http.get('/brews').then(function (response) {
+            $scope.brews = response.data.brews;
+            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
             $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
         });
 
@@ -255,9 +257,6 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
         // update to have different ranges for temp and outpus
         $scope.renderDatePicker = function() {
-            $scope.brews = response.data.brews;
-            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
-
             var startDate = null;
             var endDate = null;
             if ($scope.selectedBrew.fermentationComplete > 0) {
