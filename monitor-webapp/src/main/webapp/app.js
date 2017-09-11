@@ -215,7 +215,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
     })
 
     .controller('chartController', function ($scope, $http) {
-        $scope.renderCharts() = function(brewDate, lowerRange, upperRange) {
+        $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
             $http.get('/brews').then(function (response) {
                 $scope.brews = response.data.brews;
 
