@@ -276,7 +276,7 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         // render initial chart
-        $scope.renderCharts();
+        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate);
 
         var chartOptions = {
             chart: {
