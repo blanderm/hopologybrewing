@@ -6,7 +6,7 @@ provider "aws" {
 data "aws_caller_identity" "current" { }
 
 resource "aws_iam_role" "lambda_role" {
-  name = "hopologybrewing-lambda"
+  name = "brewery-lambda-role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -25,7 +25,7 @@ EOF
 }
 
 data "aws_iam_role" "lambda_role" {
-  role_name = "hopologybrewing-lambda"
+  role_name = "brewery-lambda-role"
   depends_on = ["aws_iam_role.lambda_role"]
 }
 
@@ -41,12 +41,43 @@ resource "aws_iam_role_policy_attachment" "dynamo_policy_attach" {
   depends_on = ["aws_iam_role.lambda_role"]
 }
 
-resource "aws_kms_key" "hopologybrewing-key" {
-  description = "Key used for sensitive info related to the hoplogybrewing brewery controller"
+resource "aws_iam_policy" "sns-allow-policy" {
+  name        = "sns-allow-policy"
+  description = "Allow function to interact with SNS"
+  policy      =  <<EOF
+{
+  "Id": "Policy1506534119126",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1506533767150",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:ListSubscriptions",
+        "sns:Publish",
+        "sns:Subscribe"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "sns_policy_attach" {
+  name       = "sns-policy-attach"
+  roles      = ["${aws_iam_role.lambda_role.name}"]
+  policy_arn = "${aws_iam_policy.sns-allow-policy.arn}"
+  depends_on = ["aws_iam_role.lambda_role", "aws_iam_policy.sns-allow-policy"]
+}
+
+resource "aws_kms_key" "brewery-key" {
+  description = "Key used for sensitive info related to the brewery controller"
   policy = <<EOF
   {
     "Version": "2012-10-17",
-    "Id": "hopologybrewing-key-policy",
+    "Id": "brewery-key-policy",
     "Statement": [
       {
         "Sid": "Enable IAM User Permissions",
@@ -126,17 +157,17 @@ resource "aws_kms_key" "hopologybrewing-key" {
 
   tags {
     name = "Brewery Temperature Controller"
-    creator = "Bryan Landerman"
-    purpose = "Key used for sensitive info related to the hoplogybrewing brewery controller"
+    creator = "${data.aws_caller_identity.current.account_id}"
+    purpose = "Key used for sensitive info related to the brewery controller"
   }
 
   depends_on = ["aws_iam_role.lambda_role"]
 }
 
-resource "aws_kms_alias" "hopologybrewing-key" {
-  name          = "alias/hopologybrewing-key"
-  target_key_id = "${aws_kms_key.hopologybrewing-key.key_id}"
-  depends_on = ["aws_kms_key.hopologybrewing-key"]
+resource "aws_kms_alias" "brewery-key" {
+  name          = "alias/brewery-key"
+  target_key_id = "${aws_kms_key.brewery-key.key_id}"
+  depends_on = ["aws_kms_key.brewery-key"]
 }
 
 // DynamoDB resources
@@ -153,7 +184,7 @@ resource "aws_dynamodb_table" "brew_info" {
 
   tags {
     name = "Brewery Temperature Controller"
-    creator = "Bryan Landerman"
+    creator = "${data.aws_caller_identity.current.account_id}"
     purpose = "Defines a brew including key dates."
   }
 }
@@ -190,7 +221,7 @@ resource "aws_dynamodb_table" "brew_recordings" {
 
   tags {
     name = "Brewery Temperature Controller"
-    creator = "Bryan Landerman"
+    creator = "${data.aws_caller_identity.current.account_id}"
     purpose = "Record temperature and output readings during fermentation and crashing"
   }
 }
@@ -199,6 +230,6 @@ output "region" {
   value = "${var.region}"
 }
 
-output "hopologybrewing-key-arn" {
-  value = "${aws_kms_key.hopologybrewing-key.arn}"
+output "brewery-key-arn" {
+  value = "${aws_kms_key.brewery-key.arn}"
 }

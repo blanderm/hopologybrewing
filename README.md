@@ -70,9 +70,16 @@ export AWS_PROFILE=brewery_profile
 ### Building, Deploying and Running the code
 
 Prepare for Lambda Function deployment
-1. Initialize apex: apex init
+1. Initialize apex:
+```
+apex init
+```
+
 2. Update your project.json to include environment variables for:
 ```
+"memory": 512,
+"timeout": 1,
+"role": "arn:aws:iam::<<THE AWS ACCOUNT WHERE THIS IS DEPLOYED>>:role/brewery-lambda-role",
 "profile": "brewery_profile",
   "environment": {
     "BCS_IP": "<<THE IP OF YOUR BCS CONTROLLER>>",
@@ -82,24 +89,34 @@ Prepare for Lambda Function deployment
   "kms_arn": "<<TO BE INSERTED LATER>>"
 ```
 
-Deploy Infrastructure using terraform apex integration
+#### Deploy Infrastructure using terraform apex integration
 1. Your AWS Profile should contain your region but if not, you can specify it in your variables.tf file in the infrastructure directory
 2. Open main.tf in the infrastructure file and update the tags to reflect your AWS account preferences
-3. Deploy infrastructure: apex infra plan, then apex infra apply.
-4. Copy the hopologybrewing-key-arn that is output upon completion.
+3. Deploy infrastructure by first running a plan:
+```
+apex infra plan
+```
 
-Deploy Lambda Functions
+If everything looks good, then stand up the infrastructure:
+```
+apex infra apply
+```
+
+4. Copy the "hopologybrewing-key-arn" that is output upon completion.
+
+#### Deploy Lambda Functions
 1. Open your project.json and update the kms_arn with the value copied upon completion of the infrastructure deployment
 2. Confirm what will be deployed:
 ```
 apex deploy --dry-run
 ```
-3. Deploy your functions:
+3. If all looks good, deploy your functions:
 ```
 apex deploy
 ```
+4. Log into the AWS console and navigate to your lambda functions.  You will need to select the kms key and manually encrypt each environment variable and save the function.  For some reason Apex doesn't do this automatically, issue discussed here: https://github.com/apex/apex/issues/651
 
-Remove your AWS resources:
+#### Remove your AWS resources:
 1. Delete your functions:
 ```
 apex delete

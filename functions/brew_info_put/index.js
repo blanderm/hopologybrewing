@@ -8,10 +8,12 @@ const dynamo = new doc.DynamoDB();
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
     var data = JSON.parse(JSON.stringify(event));
+    var brewDate = (data.brewDate === undefined) ? new Date().getTime() : data.brewDate;
+
     var params = {
         TableName: "brew_info",
         Item: {
-            brew_date: data.brewDate,
+            brew_date: brewDate,
             description: data.description,
             last_updated: new Date().getTime(),
             name: data.name
