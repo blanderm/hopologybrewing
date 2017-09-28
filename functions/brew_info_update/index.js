@@ -41,13 +41,14 @@ function processEvent(event, context, callback, brewDate) {
     };
 
     if (CLICK_SINGLE == event.clickType) {
+        console.log("Received event type " + event.clickType + ", inserting timestamp for yeast pitch.");
+        updateBrewInfo(params, "yeast_pitch", callback);
+    } else if (CLICK_DOUBLE == event.clickType) {
         console.log("Received event type " + event.clickType + ", inserting timestamp for crash start.");
         updateBrewInfo(params, "crash_start", callback);
-    } else if (CLICK_DOUBLE == event.clickType) {
+    } else if (CLICK_LONG == event.clickType) {
         console.log("Received event type " + event.clickType + ", inserting timestamp for brew completion date.");
         updateBrewInfo(params, "brew_completion_date", callback);
-    } else if (CLICK_LONG == event.clickType) {
-        console.log("Received event type " + event.clickType + ", ignoring.");
     } else {
         console.log("Received event without click type, ignoring.");
     }

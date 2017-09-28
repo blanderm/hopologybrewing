@@ -60,7 +60,7 @@ function getActiveBrew(event, context, callback) {
         var item;
         for (var i = 0; i < response.Items.length; i++) {
             item = response.Items[i];
-            if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
+            if ((item.brew_complete_date === undefined && now >= item.yeastPitch) || (now >= item.yeastPitch && now <= item.brew_complete_date)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date);
                 processEvent(event, context, callback, brewDate);

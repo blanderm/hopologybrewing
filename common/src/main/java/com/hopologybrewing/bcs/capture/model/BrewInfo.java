@@ -14,6 +14,7 @@ public class BrewInfo {
     private String name;
     private long brewDate;
     private String description;
+    private long yeastPitch = 0L;
     private long crashStart = 0L;
     private long brewCompleteDate = 0L;
     private long lastUpdated;
@@ -111,9 +112,23 @@ public class BrewInfo {
         return new Date(crashStart);
     }
 
+    @DynamoDBAttribute(attributeName="yeast_pitch")
+    public long getYeastPitch() {
+        return yeastPitch;
+    }
+
+    @DynamoDBIgnore
+    public Date getYeastPitchAsDate() {
+        return new Date(yeastPitch);
+    }
+
+    public void setYeastPitch(long yeastPitch) {
+        this.yeastPitch = yeastPitch;
+    }
+
     /*
-            Returns -1 if m,ost recent can't be found
-         */
+         Returns -1 if m,ost recent can't be found
+     */
     public static int getMostRecentBrewIndex(List<BrewInfo> list) {
         int mostRecentIndex = -1;
         long mostRecentBrewDate = 0L;
