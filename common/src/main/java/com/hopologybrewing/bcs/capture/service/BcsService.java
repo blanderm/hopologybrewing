@@ -44,6 +44,7 @@ public abstract class BcsService {
 
         Map<Type, Class> clz = new HashMap<>();
         clz.put(Type.TEMP, TemperatureProbe.class);
+        clz.put(Type.TEMPS, List.class);
         clz.put(Type.PROCESS, Process.class);
         clz.put(Type.PROCESSES, List.class);
         clz.put(Type.STATE, State.class);

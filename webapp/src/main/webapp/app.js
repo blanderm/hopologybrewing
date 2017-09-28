@@ -1,4 +1,4 @@
-angular.module('hopologybrewing-bcs', ['daterangepicker'])
+app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
     .controller('logController', function ($scope, $http) {
         $scope.clearLog = function(type) {
             if (confirm("Are you sure you want to delete all data?") == true) {
@@ -39,6 +39,42 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 $scope.processes = response.data;
             }
         })
+    })
+
+    .controller('brewInfoCreationController', function ($scope, $http) {
+        $scope.modalShown = false;
+
+        $scope.toggleModal = function () {
+            $scope.modalShown = !$scope.modalShown;
+        };
+
+        $scope.createBrew = function(brew_name, brew_description, month, day, year) {
+            var url = 'https://4h1i36hdm1.execute-api.us-west-2.amazonaws.com/api/create';
+            var data = {
+                "month": month,
+                "day": day,
+                "year": year,
+                "description": brew_description,
+                "name": brew_name
+            };
+
+            console.log(data);
+            var config = {
+                headers : {
+                    'Content-Type': 'application/json;charset=utf-8;'
+                }
+            };
+
+            $http.post(url, data, config).then(function (response) {
+                if (response.data != null) {
+                    console.log(response.data);
+                    $scope.modalShown = false;
+                }
+            }, function (error) {
+                console.log(error);
+                $scope.modalShown = false;
+            });
+        };
     })
 
     .controller('currentStateController', function ($scope, $http) {
@@ -378,3 +414,25 @@ angular.module('hopologybrewing-bcs', ['daterangepicker'])
             });
         };
     });
+
+app.directive('modalDialog', function() {
+    return {
+        restrict: 'E',
+        scope: {
+            show: '='
+        },
+        replace: true, // Replace with the template below
+        transclude: true, // we want to insert custom content inside the directive
+        link: function(scope, element, attrs) {
+            scope.dialogStyle = {};
+            if (attrs.width)
+                scope.dialogStyle.width = attrs.width;
+            if (attrs.height)
+                scope.dialogStyle.height = attrs.height;
+            scope.hideModal = function() {
+                scope.show = false;
+            };
+        },
+        template: "<div class='ng-modal' ng-show='show'><div class='ng-modal-overlay' ng-click='hideModal()'></div><div class='ng-modal-dialog' ng-style='dialogStyle'><div class='ng-modal-close' ng-click='hideModal()'>X</div><div class='ng-modal-dialog-content' ng-transclude></div></div></div>"
+    };
+});

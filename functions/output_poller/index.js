@@ -60,7 +60,7 @@ function getActiveBrew(event, context, callback) {
         var item;
         for (var i = 0; i < response.Items.length; i++) {
             item = response.Items[i];
-            if ((item.brew_complete_date === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.brew_complete_date)) {
+            if ((item.crash_start === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.crash_start)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date + " Yeast Pitch: " + item.yeast_pitch);
                 processEvent(event, context, callback, brewDate);
@@ -77,7 +77,7 @@ function processEvent(event, context, callback, brewDate) {
         var request = http.request({
                 host: decryptedHost,
                 auth: decryptedUser + ':' + decryptedPwd,
-                path: '/api/temp/' + i,
+                path: '/api/output/' + i,
                 port: '80',
                 method: 'GET'
             },
@@ -103,31 +103,39 @@ function processEvent(event, context, callback, brewDate) {
         request.end();
     }
 
-    callback(null, "Completed temp reading capture.");
+    callback(null, "Completed output reading capture.");
 }
 
 function recordReadings(results, size, brewDate) {
     if (results.length === size) {
         var data = JSON.parse("{}");
-        results.forEach(function(item) {
+        var atLeastOneOn = false;
+        results.forEach(function (item) {
             data[item.name] = item;
-        });
 
-        var params = {
-            TableName: "brew_recordings",
-            Item: {
-                type: "temperature_recording",
-                timestamp: new Date().getTime(),
-                brew_date: brewDate,
-                data: data
+            if (!atLeastOneOn) {
+                atLeastOneOn = item.on;
             }
-        };
-
-        var paramsStr = JSON.stringify(params);
-        console.log("Params to persist: " + paramsStr);
-        dynamo.putItem(params, function (err, resp) {
-            var respMsg = err ? err.message : "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
-            console.log(respMsg);
         });
+
+        // only record if at least one pump was on
+        if (atLeastOneOn) {
+            var params = {
+                TableName: "brew_recordings",
+                Item: {
+                    type: "output_recording",
+                    timestamp: new Date().getTime(),
+                    brew_date: brewDate,
+                    data: data
+                }
+            };
+
+            var paramsStr = JSON.stringify(params);
+            console.log("Params to persist: " + paramsStr);
+            dynamo.putItem(params, function (err, resp) {
+                var respMsg = err ? err.message : "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+                console.log(respMsg);
+            });
+        }
     }
 }

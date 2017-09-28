@@ -84,12 +84,25 @@
                                     <span ng-controller="alertController" style="display: inline-block;">
                                         <button id="toggleAlerting" ng-click="toggleAlerting()" class="btn btn-gray" style="float: left"><span>{{alertEnabled ? 'Disable Alerting' : 'Enable Alerting'}}</span></button>
                                     </span>
-                                    <span ng-controller="logController">
+                                    <span ng-controller="brewInfoCreationController">
                                         <span style="display: inline-block;">
-                                            <button id="clearTempLogs" ng-click="clearLog('temp')" class="btn btn-gray" style="float: left"><span>Clear Temps</span></button>
-                                        </span>
-                                        <span style="display: inline-block;">
-                                            <button id="clearOutputLogs" ng-click="clearLog('output')" class="btn btn-gray" style="float: left"><span>Clear Outputs</span></button>
+                                            <button id="toggleModal" ng-click="toggleModal()" class="btn btn-gray" style="float: left"><span>Create Brew</span></button>
+                                            <modal-dialog show='modalShown' width='400px' height='60%'>
+                                                <h2>Create Brew</h2>
+                                                <div>
+                                                    <form>
+                                                        <div><label class="small-pad" for="brew_name">Name: </label><input type="text" ng-model="brew_name"></div>
+                                                        <div><label class="small-pad" for="brew_description">Description: </label><input type="text" ng-model="brew_description"></div>
+                                                        <div><label class="small-pad" for="month">Month: </label><input type="text" ng-model="month"></div>
+                                                        <div><label class="small-pad" for="day">Day: </label><input type="text" ng-model="day"></div>
+                                                        <div><label class="small-pad" for="year">Year: </label><input type="text" ng-model="year"></div>
+                                                    </form>
+                                                </div>
+                                                <div>
+                                                    <p></p>
+                                                    <button id="createBrew" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn small-pad" style="float: left"><span>Create Brew</span></button>
+                                                </div>
+                                            </modal-dialog>
                                         </span>
                                     </span>
                                 </div>

@@ -39,19 +39,14 @@ Install npm, the Node Package Manager.
 brew install node
 ```
 
-Ensure you have set up the Apex AWS IAM roles and have them assigned to a named user, and that you know the key and secret key. The roles can be assigned by Apex as long as your user has the following policy attached in the IAM console.
+Ensure you have set up an Apex AWS user and that you know the key and secret key. The roles can be assigned by Apex as long as your user has the following permissoins attached in the IAM console:
 
 ```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "iam:*",
-            "Resource": "*"
-        }
-    ]
-}
+AWSLambdaFullAccess
+IAMFullAccess
+AmazonDynamoDBFullAccess
+AmazonAPIGatewayAdministrator
+AWSKeyManagementServicePowerUser
 ```
 
 Set up a local AWS profile for your AWS user using the key and secret key pair
@@ -114,7 +109,9 @@ apex deploy --dry-run
 ```
 apex deploy
 ```
-4. Log into the AWS console and navigate to your lambda functions.  You will need to select the kms key and manually encrypt each environment variable and save the function.  For some reason Apex doesn't do this automatically, issue discussed here: https://github.com/apex/apex/issues/651
+5. Open the variables.tf file and uncomment the *variable "apex_function_brew_info_put" {}* line.
+6. Open the main.tf file and navigate to the bottom.  You'll notice several resource blocks commented out, uncomment them and re-run *apex infra apply*.  This will need to be repeated everytime a clean apply/deploy occurs.
+7. Log into the AWS console and navigate to your lambda functions.  You will need to select the kms key and manually encrypt each environment variable and save the function.  For some reason Apex doesn't do this automatically, issue discussed here: https://github.com/apex/apex/issues/651
 
 #### Remove your AWS resources:
 1. Delete your functions:
@@ -126,7 +123,8 @@ apex delete
 ```
 apex infra destroy
 ```
-
+3. Open the variables.tf file and comment out the *variable "apex_function_brew_info_put" {}* line.
+4. Open the main.tf file and navigate to the bottom.  You'll notice several resource blocks under the comment *Consolidated items that require functions to be deployed by apex prior to "apex infra apply" executing successfully*.  Comment out all resource blocks below that comment. 
 
 ## Built With
 

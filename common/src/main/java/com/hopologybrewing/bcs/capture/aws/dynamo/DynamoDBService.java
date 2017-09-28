@@ -25,20 +25,22 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.hopologybrewing.bcs.capture.aws.dynamo.DynamoConstants.*;
+
 /**
  * Created by ddcbryanl on 1/18/17.
  */
 public class DynamoDBService implements DbService {
     private static final Logger log = LoggerFactory.getLogger(DynamoDBService.class);
-    private static final Regions CURRENT_REGION = Regions.US_EAST_1;
+    private static final Regions CURRENT_REGION = Regions.US_WEST_2;
     private static final String BD_ALL_CACHE_KEY = "bd_all_cache_key";
     private static final String BD_CURR_CACHE_KEY = "bd_current_cache_key";
     private static final String BD_RECENT_CACHE_KEY = "bd_recent_cache_key";
     private static final Cache<String, Date> cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(30L, TimeUnit.DAYS)
+            .expireAfterWrite(5L, TimeUnit.MINUTES)
             .build();
     private static final Cache<String, List<BrewInfo>> brewsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(30L, TimeUnit.DAYS)
+            .expireAfterWrite(5L, TimeUnit.MINUTES)
             .build();
 
     // todo: create an interface that allows brew creation/initiation and edit
@@ -95,10 +97,10 @@ public class DynamoDBService implements DbService {
         OutputRecording recording;
         List<Recording> recordings = new LinkedList<>();
         for (Item item : findReadings(date, OutputRecording.OUTPUT_TYPE, lowerRange, upperRange)) {
-            timestamp = new Date(item.getLong("timestamp"));
-            brewDate = new Date(item.getLong("brewDate"));
+            timestamp = new Date(item.getLong(BREW_RECORDINGS_TIMESTAMP));
+            brewDate = new Date(item.getLong(BREW_RECORDINGS_BREW_DATE));
 
-            for (Object o : ((Map) item.get("data")).values()) {
+            for (Object o : ((Map) item.get(BREW_RECORDINGS_DATA)).values()) {
                 if (o instanceof Map) {
                     recording = new OutputRecording();
                     recording.setTimestamp(timestamp);
@@ -146,11 +148,11 @@ public class DynamoDBService implements DbService {
         TemperatureProbeRecording recording;
         List<Recording> recordings = new LinkedList<>();
         for (Item item : findReadings(date, TemperatureProbeRecording.TEMPERATURE_TYPE, lowerRange, upperRange)) {
-            timestamp = new Date(item.getLong("timestamp"));
-            brewDate = new Date(item.getLong("brewDate"));
+            timestamp = new Date(item.getLong(BREW_RECORDINGS_TIMESTAMP));
+            brewDate = new Date(item.getLong(BREW_RECORDINGS_BREW_DATE));
 
             // todo: there has to be a better way to do this...consider DBMapper.
-            for (Object o : ((Map) item.get("data")).values()) {
+            for (Object o : ((Map) item.get(BREW_RECORDINGS_DATA)).values()) {
                 if (o instanceof Map) {
                     recording = new TemperatureProbeRecording();
                     recording.setTimestamp(timestamp);
@@ -166,7 +168,9 @@ public class DynamoDBService implements DbService {
                                 probe.setTemp(((BigDecimal) entry.getValue()).doubleValue());
                                 break;
                             case "setpoint":
-                                probe.setSetpoint(((BigDecimal) entry.getValue()).doubleValue());
+                                if (entry.getValue() != null) {
+                                    probe.setSetpoint(((BigDecimal) entry.getValue()).doubleValue());
+                                }
                                 break;
                             case "resistance":
                                 probe.setResistance(((BigDecimal) entry.getValue()).doubleValue());
@@ -200,14 +204,15 @@ public class DynamoDBService implements DbService {
         AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
         builder.withRegion(CURRENT_REGION);
         DynamoDB dynamoDB = new DynamoDB(builder.build());
-        Table table = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE);
+        Table table = dynamoDB.getTable(DynamoConstants.BREW_RECORDINGS_TABLE);
 
         QuerySpec spec = new QuerySpec()
                 .withKeyConditionExpression("#ts between :v_dateLower and :v_dateUpper and #t = :v_type")
-                .withFilterExpression("brewDate = :v_bDate")
+                .withFilterExpression("#bd = :v_bDate")
                 .withNameMap(new NameMap()
-                        .with("#ts", "timestamp")
-                        .with("#t", "type"))
+                        .with("#bd", BREW_RECORDINGS_BREW_DATE)
+                        .with("#ts", BREW_RECORDINGS_TIMESTAMP)
+                        .with("#t", BREW_RECORDINGS_TYPE))
                 .withValueMap(new ValueMap()
                         .withNumber(":v_dateLower", lowerRange)
                         .withNumber(":v_dateUpper", upperRange)
@@ -229,7 +234,7 @@ public class DynamoDBService implements DbService {
             builder.withRegion(CURRENT_REGION);
             AmazonDynamoDB client = builder.build();
             DynamoDB dynamoDB = new DynamoDB(client);
-            Table table = dynamoDB.getTable(DynamoConstants.BREW_READINGS_TABLE);
+            Table table = dynamoDB.getTable(DynamoConstants.BREW_RECORDINGS_TABLE);
             table.putItem(item);
         }
     }
@@ -260,10 +265,10 @@ public class DynamoDBService implements DbService {
             // populate item
             ObjectMapper mapper = new ObjectMapper();
             item = new Item()
-                    .withKeyComponent("timestamp", timestamp.getTime())
-                    .withKeyComponent("type", type)
-                    .with("brewDate", brewDate.getTime())
-                    .withJSON("data", mapper.writeValueAsString(recordingMap));
+                    .withKeyComponent(BREW_RECORDINGS_TIMESTAMP, timestamp.getTime())
+                    .withKeyComponent(BREW_RECORDINGS_TYPE, type)
+                    .with(BREW_RECORDINGS_BREW_DATE, brewDate.getTime())
+                    .withJSON(BREW_RECORDINGS_DATA, mapper.writeValueAsString(recordingMap));
         } catch (ExecutionException e) {
             log.error("Failed creating item - ", e);
         } catch (JsonProcessingException e) {

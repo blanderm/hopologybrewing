@@ -15,7 +15,10 @@ import static com.hopologybrewing.bcs.capture.model.TemperatureProbeRecording.TE
  * Created by ddcbryanl on 1/18/17.
  */
 public class DynamoConstants {
-    public static final String BREW_READINGS_TABLE = "brew_recordings";
-    public static final String BREWDATE_TIMESTAMP_INDEX = "brewDate-timestamp-index";
     public static final String BREW_INFO_TABLE = "brew_info";
+    public static final String BREW_RECORDINGS_TABLE = "brew_recordings";
+    public static final String BREW_RECORDINGS_TIMESTAMP = "timestamp";
+    public static final String BREW_RECORDINGS_TYPE = "type";
+    public static final String BREW_RECORDINGS_DATA = "data";
+    public static final String BREW_RECORDINGS_BREW_DATE = "brew_date";
 }
