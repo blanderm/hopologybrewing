@@ -7,13 +7,13 @@ var dynamo = new AWS.DynamoDB.DocumentClient();
 const CLICK_SINGLE = "SINGLE";
 const CLICK_DOUBLE = "DOUBLE";
 const CLICK_LONG = "LONG";
+const BREW_INFO_TABLE_NAME = "brew_info";
 
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
-    let data = JSON.parse(JSON.stringify(event));
 
     var brewDate = 0;
-    dynamo.scan({TableName: "brew_info"}, function (err, resp) {
+    dynamo.scan({TableName: BREW_INFO_TABLE_NAME}, function (err, resp) {
         var response = err ? err.message : JSON.parse(JSON.stringify(resp));
         console.log("Raw response from scan: " + JSON.stringify(response));
 
@@ -36,7 +36,7 @@ function processEvent(event, context, callback, brewDate) {
         Key: {
             brew_date: brewDate
         },
-        TableName: "brew_info",
+        TableName: BREW_INFO_TABLE_NAME,
         UpdateExpression: "set last_updated = :lu, #an=:av",
     };
 
