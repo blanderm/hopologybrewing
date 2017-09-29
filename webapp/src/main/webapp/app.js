@@ -31,6 +31,20 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         });
     })
 
+    .controller('brewInfoController', function ($scope, $http) {
+        $http.get('/brews').
+        then(function (response) {
+            $scope.brews = response.data.brews;
+            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
+
+            $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
+            $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
+            $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
+            $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
+
+        })
+    })
+
     .controller('processController', function ($scope, $http) {
         $http.get('/process').
         then(function (response) {
@@ -49,7 +63,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         $scope.createBrew = function(brew_name, brew_description, month, day, year) {
-            var url = 'https://4h1i36hdm1.execute-api.us-west-2.amazonaws.com/api/create';
+            var url = 'https://XXXXXXXXX.execute-api.us-west-2.amazonaws.com/api/create';
             var data = {
                 "month": month,
                 "day": day,
@@ -258,9 +272,9 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
             var startDate = null;
             var endDate = null;
-            if ($scope.selectedBrew.fermentationComplete > 0) {
+            if ($scope.selectedBrew && $scope.selectedBrew.brewCompleteDate > 0) {
                 // if brew is complete, render all data
-                endDate = moment($scope.selectedBrew.fermentationComplete);
+                endDate = moment($scope.selectedBrew.brewCompleteDate);
                 startDate = moment($scope.selectedBrew.brewDate);
             } else {
                 endDate = moment();
@@ -294,7 +308,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             };
 
             $scope.dateMin =  $scope.selectedBrew.brewDate;
-            $scope.dateMax =  ($scope.selectedBrew.fermentationComplete > 0 ? $scope.selectedBrew.fermentationComplete : null);
+            $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
             $scope.datePicker = {startDate: startDate, endDate: endDate};
             $scope.renderCharts($scope.selectedBrew.brewDate, startDate.format("x"), endDate.format("x"));
         });
