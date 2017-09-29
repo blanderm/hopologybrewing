@@ -301,8 +301,8 @@ output "brewery-key-arn" {
 //  is_enabled = false
 //}
 //
-//resource "aws_cloudwatch_event_target" "temperature_poll_every_minute" {
-//  rule = "${aws_cloudwatch_event_rule.every_minute.name}"
+//resource "aws_cloudwatch_event_target" "temperature_poll_every_five_minutes" {
+//  rule = "${aws_cloudwatch_event_rule.every_five_minutes.name}"
 //  arn = "${var.apex_function_temperature_poller}"
 //}
 //
@@ -311,11 +311,11 @@ output "brewery-key-arn" {
 //  action = "lambda:InvokeFunction"
 //  function_name = "${var.apex_function_temperature_poller}"
 //  principal = "events.amazonaws.com"
-//  source_arn = "${aws_cloudwatch_event_rule.every_minute.arn}"
+//  source_arn = "${aws_cloudwatch_event_rule.every_five_minutes.arn}"
 //}
 //
-//resource "aws_cloudwatch_event_target" "output_poll_every_five_minutes" {
-//  rule = "${aws_cloudwatch_event_rule.every_five_minutes.name}"
+//resource "aws_cloudwatch_event_target" "output_poll_every_minute" {
+//  rule = "${aws_cloudwatch_event_rule.every_minute.name}"
 //  arn = "${var.apex_function_output_poller}"
 //}
 //
@@ -324,7 +324,7 @@ output "brewery-key-arn" {
 //  action = "lambda:InvokeFunction"
 //  function_name = "${var.apex_function_output_poller}"
 //  principal = "events.amazonaws.com"
-//  source_arn = "${aws_cloudwatch_event_rule.every_five_minutes.arn}"
+//  source_arn = "${aws_cloudwatch_event_rule.every_minute.arn}"
 //}
 //
 //// API Gateway Resources
