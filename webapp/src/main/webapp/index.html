@@ -43,10 +43,7 @@
                             </div>
                         </div>
 
-                        <div  class="pull-left pad center" ng-controller="currentStateController" style="width: 300px">
-                                <div ng-show="activeProcesses.length == 0">
-                                    <h2>No Active Processes</h2>
-                                </div>
+                        <div  class="pull-left pad center" ng-controller="currentStateController" style="width: 300px" ng-show="activeProcesses.length != 0">
                                 <div id="{{'currentState' + $index}}" ng-repeat="process in activeProcesses">
                                     <h2><a data-toggle="modal" data-target="{{'#processStates' + $index}}">{{ process.name }}</a></h2>
                                     <div><b>Active State:</b> {{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></div>
@@ -72,18 +69,14 @@
                                     </div>
                                 </div>
                         </div>
-                        <div  class="pull-left pad" style="width: 300px">
-                            <div  class="center" ng-show="selectedBrew">
-                                <h2 title="Brewed on {{brewDate}}">{{selectedBrew.name}}</h2>
-                            </div>
-                            <div class="clear center pad">
-                                <div class="pull-left" style="word-wrap: break-word">{{selectedBrew.description}}</div>
-                                <div class="clear">
-                                    <div ng-show="yeastPitch"><b>Pitched On: </b>{{yeastPitch}}</div>
-                                    <div ng-show="crashStart"><b>Started Crash On: </b>{{crashStart}}</div>
-                                    <div ng-show="brewCompleteDate"><b>Completed On: </b>{{brewCompleteDate}}</div>
-                                </div>
-                            </div>
+                        <div  class="pull-left pad" style="width: 300px" ng-show="selectedBrew">
+                            <h2 title="Brewed on {{brewDate}}">{{selectedBrew.name}}</h2>
+                            <p class="pull-left" style="word-wrap: break-word">{{selectedBrew.description}}</p>
+                            <p class="clear">
+                                <div ng-show="yeastPitch"><b>Pitched On: </b>{{yeastPitch}}</div>
+                                <div ng-show="crashStart"><b>Started Crash On: </b>{{crashStart}}</div>
+                                <div ng-show="brewCompleteDate"><b>Completed On: </b>{{brewCompleteDate}}</div>
+                            </p>
                         </div>
                     </div>
                 </div>
