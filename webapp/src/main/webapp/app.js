@@ -16,39 +16,6 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         })
     })
 
-    .controller('brewInfoCreationController', function ($scope, $http) {
-        $scope.createBrew = function (brew_name, brew_description, month, day, year) {
-            if (!brew_name || !month || !day || !year) {
-                $scope.createBrewError = "You must provide a brew name, month, day and year.";
-            } else {
-                var url = 'https://XXXXXXXXX.execute-api.us-west-2.amazonaws.com/api/create';
-                var data = {
-                    "month": month,
-                    "day": day,
-                    "year": year,
-                    "description": brew_description,
-                    "name": brew_name
-                };
-
-                var config = {
-                    headers: {
-                        'Content-Type': 'application/json;charset=utf-8;'
-                    }
-                };
-
-                $http.post(url, data, config).then(function (response) {
-                    if (response.data != null) {
-                        $("#createBrewDialog").modal('hide');
-                        $scope.createBrewError = undefined;
-                    }
-                }, function (error) {
-                    console.log(error);
-                    $scope.createBrewError = "Failed to create brew, please try again.";
-                });
-            }
-        };
-    })
-
     .controller('currentStateController', function ($scope, $http) {
         $http.get('/process/status').
         then(function (response) {
@@ -222,7 +189,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
     })
 
-    .controller('chartController', function ($scope, $http) {
+    .controller('brewController', function ($scope, $http) {
         $http.get('/brews').
         then(function (response) {
             $scope.brews = response.data.brews;
@@ -276,6 +243,37 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             $scope.datePicker = {startDate: startDate, endDate: endDate};
             $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
         });
+
+        $scope.createBrew = function (brew_name, brew_description, month, day, year) {
+            if (!brew_name || !month || !day || !year) {
+                $scope.createBrewError = "You must provide a brew name, month, day and year.";
+            } else {
+                var url = 'https://38i2h2bygi.execute-api.us-west-2.amazonaws.com/api/create';
+                var data = {
+                    "month": month,
+                    "day": day,
+                    "year": year,
+                    "description": brew_description,
+                    "name": brew_name
+                };
+
+                var config = {
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8;'
+                    }
+                };
+
+                $http.post(url, data, config).then(function (response) {
+                    if (response.data != null) {
+                        $("#createBrewDialog").modal('hide');
+                        $scope.createBrewError = undefined;
+                    }
+                }, function (error) {
+                    console.log(error);
+                    $scope.createBrewError = "Failed to create brew, please try again.";
+                });
+            }
+        };
 
         var chartOptions = {
             chart: {
