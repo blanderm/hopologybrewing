@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('Loading temperature_poller function');
+console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
 const doc = require('dynamodb-doc');
 const dynamo = new doc.DynamoDB();

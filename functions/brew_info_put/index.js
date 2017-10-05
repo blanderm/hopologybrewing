@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('Loading brew_info_put function');
+console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
 const doc = require('dynamodb-doc');
 const dynamo = new doc.DynamoDB();

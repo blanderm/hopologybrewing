@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('Loading brew_info_update function');
+console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
 const AWS = require('aws-sdk');
 const sns = new AWS.SNS();
@@ -26,7 +26,7 @@ exports.handler = (event, context, callback) => {
             if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date);
-                processEvent(event, context, callback, brewDate);
+                processEvent(event, callback, brewDate);
                 break;
             }
         }
