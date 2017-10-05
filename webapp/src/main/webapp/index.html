@@ -26,12 +26,11 @@
 
     <body ng-app="hopologybrewing-bcs">
         <div class="panel panel-default">
-            <div class="panel-body">
+            <div class="panel-body" ng-controller="chartController">
                 <div class="panel panel-default center">
                     <div class="panel-body" style="display: inline-block;">
-                        <div class="stack-left">
+                        <div class="pull-left">
                             <div class="center" ng-controller="gaugeController">
-                                <div><a ng-click="reloadGauges()">Reload Temps</a></div>
                                  <span ng-repeat="options in gaugeOptions">
                                     <div id="{{'temp-gauge' + $index}}" class="gauge" style="display: inline-block;">{{ renderGauges('temp-gauge' + $index, options) }}</div>
                                  </span>
@@ -44,81 +43,106 @@
                             </div>
                         </div>
 
-                        <div  class="stack-left pad">
-                            <div>
-                                <div ng-controller="currentStateController">
-                                    <div ng-show="activeProcesses.length == 0">
-                                        <span class="stack-left pad center">
-                                            <h1 style="display: inline-block">No Active Processes</h1>
-                                        </span>
-                                    </div>
-                                    <div id="{{'currentState' + $index}}" class="stack-left pad" ng-repeat="process in activeProcesses">
-                                        <h1><a data-toggle="modal" data-target="{{'#processStates' + $index}}">{{ process.name }}</a></h1>
-                                        <div><b>Active State:</b> {{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></div>
-                                        <div><b>Active Timer ({{ process.statesObj[process.current_state.state].timers[0].count_up ? 'up' : 'dn'}}):</b> {{ convertTimerValue(process.statesObj[process.current_state.state].timers[0].value) }}</div>
-                                        <div ng-show="!process.nextState.startsWith('State ')"><b>Next State:</b> {{ process.nextState ? process.nextState : "(no exit condition set)"}}</div>
+                        <div  class="pull-left pad center" ng-controller="currentStateController" style="width: 300px">
+                                <div ng-show="activeProcesses.length == 0">
+                                    <h2>No Active Processes</h2>
+                                </div>
+                                <div id="{{'currentState' + $index}}" ng-repeat="process in activeProcesses">
+                                    <h2><a data-toggle="modal" data-target="{{'#processStates' + $index}}">{{ process.name }}</a></h2>
+                                    <div><b>Active State:</b> {{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></div>
+                                    <div><b>Active Timer ({{ process.statesObj[process.current_state.state].timers[0].count_up ? 'up' : 'dn'}}):</b> {{ convertTimerValue(process.statesObj[process.current_state.state].timers[0].value) }}</div>
+                                    <div ng-show="!process.nextState.startsWith('State ')"><b>Next State:</b> {{ process.nextState ? process.nextState : "(no exit condition set)"}}</div>
 
-                                        <div id="{{'processStates' + $index}}" class="modal fade" role="dialog">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                        <h4 class="modal-title">{{ process.name + ' States' }}</h4>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <ul>
-                                                            <li ng-show="process.states != null && !state.startsWith('State ')" ng-repeat="state in process.states" data-ng-class="[process.current_state.state == $index ? 'state-list-on' : '']">
-                                                                {{ state }}
-                                                            </li>
-                                                        </ul>
-                                                    </div>
+                                    <div id="{{'processStates' + $index}}" class="modal fade" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title">{{ process.name + ' States' }}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <ul>
+                                                        <li ng-show="process.states != null && !state.startsWith('State ')" ng-repeat="state in process.states" data-ng-class="[process.current_state.state == $index ? 'state-list-on' : '']">
+                                                            {{ state }}
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                </div>
-                            <div class="clear pad">
-                                <div class="hr">.</div>
-                                <div class="clear center">
-                                    <span ng-controller="alertController" style="display: inline-block;">
-                                        <button id="toggleAlerting" ng-click="toggleAlerting()" class="btn btn-gray" style="float: left"><span>{{alertEnabled ? 'Disable Alerting' : 'Enable Alerting'}}</span></button>
-                                    </span>
-                                    <span ng-controller="brewInfoCreationController">
-                                        <span style="display: inline-block;">
-                                            <button id="toggleModal" ng-click="toggleModal()" class="btn btn-gray" style="float: left"><span>Create Brew</span></button>
-                                            <modal-dialog show='modalShown' width='400px' height='60%'>
-                                                <h2>Create Brew</h2>
-                                                <div>
-                                                    <form>
-                                                        <div><label class="small-pad" for="brew_name">Name: </label><input type="text" ng-model="brew_name"></div>
-                                                        <div><label class="small-pad" for="brew_description">Description: </label><input type="text" ng-model="brew_description"></div>
-                                                        <div><label class="small-pad" for="month">Month: </label><input type="text" ng-model="month"></div>
-                                                        <div><label class="small-pad" for="day">Day: </label><input type="text" ng-model="day"></div>
-                                                        <div><label class="small-pad" for="year">Year: </label><input type="text" ng-model="year"></div>
-                                                    </form>
-                                                </div>
-                                                <div>
-                                                    <p></p>
-                                                    <button id="createBrew" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn small-pad" style="float: left"><span>Create Brew</span></button>
-                                                </div>
-                                            </modal-dialog>
-                                        </span>
-                                    </span>
+                        </div>
+                        <div  class="pull-left pad" style="width: 300px">
+                            <div  class="center" ng-show="selectedBrew">
+                                <h2 title="Brewed on {{brewDate}}">{{selectedBrew.name}}</h2>
+                            </div>
+                            <div class="clear center pad">
+                                <div class="pull-left" style="word-wrap: break-word">{{selectedBrew.description}}</div>
+                                <div class="clear">
+                                    <div ng-show="yeastPitch"><b>Pitched On: </b>{{yeastPitch}}</div>
+                                    <div ng-show="crashStart"><b>Started Crash On: </b>{{crashStart}}</div>
+                                    <div ng-show="brewCompleteDate"><b>Completed On: </b>{{brewCompleteDate}}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div ng-controller="chartController">
-                    <div class="clear stack-right">
-                        <h4>Brew: <select ng-change="renderCharts(selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
+                <div>
+                    <div class="clear pull-right">
+                        <span ng-controller="brewInfoCreationController">
+                            <span style="display: inline-block;">
+                                <h4><a data-toggle="modal" class="glyphicon glyphicon-plus" data-target="#createBrewDialog" title="Create Brew"></a></h4>
+                                <div id="createBrewDialog" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">Create Brew</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div>
+                                                    <form role="form">
+                                                        <div class="form-group">
+                                                          <label for="brew_name">Name: </label>
+                                                          <input type="text" id="brew_name" class="form-control" ng-model="brew_name" placeholder="Name of the brew">
+                                                        </div>
+                                                        <div class="form-group">
+                                                          <label for="brew_description">Description: </label>
+                                                          <input type="text" id="brew_description" class="form-control" ng-model="brew_description" placeholder="Description of the brew">
+                                                        </div>
+                                                        <div class="form-group">
+                                                          <label for="month">Month: </label>
+                                                          <input type="text" id="month" class="form-control" ng-model="month" placeholder="Month of the brew day">
+                                                        </div>
+                                                        <div class="form-group">
+                                                          <label for="day">Day: </label>
+                                                          <input type="text" id="day" class="form-control" ng-model="day" placeholder="Day of the month of the brew day">
+                                                        </div>
+                                                        <div class="form-group">
+                                                          <label for="year">Year: </label>
+                                                          <input type="text" id="year" class="form-control" ng-model="year" placeholder="Year of the brew day">
+                                                        </div>
+                                                      </form>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn bton-block pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                                                <button id="createBrew" type="submit" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn btn-block pull-right">Create Brew</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </span>
+                        </span>
                     </div>
-                    <div class="stack-left">
-                        <h4>Date Range: <input date-range-picker class="date-picker small-pad" ng-change="renderCharts(selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" min="dateMin" max="dateMax" type="text" ng-model="datePicker" options="datePickerOptions" /></h4>
+                    <div class="pull-right">&nbsp;&nbsp;</div>
+                    <div class="pull-right">
+                        <h4>Brew: <select ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
                     </div>
-
+                    <div class="pull-left">
+                        <h4>Date Range: <input date-range-picker class="date-picker small-pad" ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" min="dateMin" max="dateMax" type="text" ng-model="datePicker" options="datePickerOptions" /></h4>
+                    </div>
                     <div class="clear">
                         <div id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                         <div id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>

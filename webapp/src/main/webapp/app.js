@@ -1,48 +1,9 @@
 app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
-    .controller('logController', function ($scope, $http) {
-        $scope.clearLog = function(type) {
-            if (confirm("Are you sure you want to delete all data?") == true) {
-                $http.get('/log/clear?type='.concat(type));
-            } else {
-                // do nothing
-            }
-        }
-    })
-
-    .controller('alertController', function ($scope, $http) {
-        $http.get('/alert/status').
-        then(function (response) {
-            $scope.alertEnabled = response.data;
-        });
-
-        $scope.toggleAlerting = function(type) {
-            if (confirm("Are you sure you want to toggle alerting?") == true) {
-                $http.get('/alert/toggle');
-            } else {
-                // do nothing
-            }
-        }
-    })
-
     .controller('outputController', function ($scope, $http) {
         $http.get('/output').
         then(function (response) {
             $scope.outputs = response.data;
         });
-    })
-
-    .controller('brewInfoController', function ($scope, $http) {
-        $http.get('/brews').
-        then(function (response) {
-            $scope.brews = response.data.brews;
-            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
-
-            $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
-            $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
-            $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
-            $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
-
-        })
     })
 
     .controller('processController', function ($scope, $http) {
@@ -56,38 +17,35 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
     })
 
     .controller('brewInfoCreationController', function ($scope, $http) {
-        $scope.modalShown = false;
+        $scope.createBrew = function (brew_name, brew_description, month, day, year) {
+            if (!brew_name || !month || !day || !year) {
+                $scope.createBrewError = "You must provide a brew name, month, day and year.";
+            } else {
+                var url = 'https://XXXXXXXXX.execute-api.us-west-2.amazonaws.com/api/create';
+                var data = {
+                    "month": month,
+                    "day": day,
+                    "year": year,
+                    "description": brew_description,
+                    "name": brew_name
+                };
 
-        $scope.toggleModal = function () {
-            $scope.modalShown = !$scope.modalShown;
-        };
+                var config = {
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8;'
+                    }
+                };
 
-        $scope.createBrew = function(brew_name, brew_description, month, day, year) {
-            var url = 'https://XXXXXXXXX.execute-api.us-west-2.amazonaws.com/api/create';
-            var data = {
-                "month": month,
-                "day": day,
-                "year": year,
-                "description": brew_description,
-                "name": brew_name
-            };
-
-            console.log(data);
-            var config = {
-                headers : {
-                    'Content-Type': 'application/json;charset=utf-8;'
-                }
-            };
-
-            $http.post(url, data, config).then(function (response) {
-                if (response.data != null) {
-                    console.log(response.data);
-                    $scope.modalShown = false;
-                }
-            }, function (error) {
-                console.log(error);
-                $scope.modalShown = false;
-            });
+                $http.post(url, data, config).then(function (response) {
+                    if (response.data != null) {
+                        $("#createBrewDialog").modal('hide');
+                        $scope.createBrewError = undefined;
+                    }
+                }, function (error) {
+                    console.log(error);
+                    $scope.createBrewError = "Failed to create brew, please try again.";
+                });
+            }
         };
     })
 
@@ -270,6 +228,12 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             $scope.brews = response.data.brews;
             $scope.selectedBrew = response.data.brews[response.data.mostRecent];
 
+            $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
+
+            if ($scope.selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
+            if ($scope.selectedBrew.yeastPitch) $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
+            if ($scope.selectedBrew.crashStart) $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
+
             var startDate = null;
             var endDate = null;
             if ($scope.selectedBrew && $scope.selectedBrew.brewCompleteDate > 0) {
@@ -302,7 +266,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
                 },
                 eventHandlers: {
                     'apply.daterangepicker': function(ev, picker) {
-                        $scope.renderCharts($scope.selectedBrew.brewDate, $scope.datePicker.startDate.format("x"), $scope.datePicker.endDate.format("x"))
+                        $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
                     }
                 }
             };
@@ -310,7 +274,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             $scope.dateMin =  $scope.selectedBrew.brewDate;
             $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
             $scope.datePicker = {startDate: startDate, endDate: endDate};
-            $scope.renderCharts($scope.selectedBrew.brewDate, startDate.format("x"), endDate.format("x"));
+            $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
         });
 
         var chartOptions = {
@@ -348,16 +312,21 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
 
         // update to have different ranges for temp and outpus
-        $scope.renderCharts = function(brewDate, lowerRange, upperRange) {
+        $scope.renderCharts = function(selectedBrew, brewDate, lowerRange, upperRange) {
+            if (selectedBrew.brewDate) $scope.brewDate = moment(selectedBrew.brewDate).format("MMM Do YYYY");
+            if (selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment(selectedBrew.brewCompleteDate).format("M/D h:mm a");
+            if (selectedBrew.yeastPitch) $scope.yeastPitch = moment(selectedBrew.yeastPitch).format("M/D h:mm a");
+            if (selectedBrew.crashStart) $scope.crashStart = moment(selectedBrew.crashStart).format("M/D h:mm a");
+
             var pathVar = '';
 
             if (brewDate > 0) {
-                pathVar = '/'.concat(brewDate)
+                pathVar = '/'.concat(moment(brewDate).format("x"))
             }
 
             var rangeString = '';
             if (lowerRange > 0) {
-                rangeString = rangeString.concat("lowerRange=").concat(lowerRange);
+                rangeString = rangeString.concat("lowerRange=").concat(moment(lowerRange).format("x"));
             }
 
             if (upperRange > 0) {
@@ -365,7 +334,7 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
                     rangeString = rangeString.concat("&");
                 }
 
-                rangeString = rangeString.concat("upperRange=").concat(upperRange);
+                rangeString = rangeString.concat("upperRange=").concat(moment(upperRange).format("x"));
             }
 
             if (rangeString != '') {
@@ -428,25 +397,3 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             });
         };
     });
-
-app.directive('modalDialog', function() {
-    return {
-        restrict: 'E',
-        scope: {
-            show: '='
-        },
-        replace: true, // Replace with the template below
-        transclude: true, // we want to insert custom content inside the directive
-        link: function(scope, element, attrs) {
-            scope.dialogStyle = {};
-            if (attrs.width)
-                scope.dialogStyle.width = attrs.width;
-            if (attrs.height)
-                scope.dialogStyle.height = attrs.height;
-            scope.hideModal = function() {
-                scope.show = false;
-            };
-        },
-        template: "<div class='ng-modal' ng-show='show'><div class='ng-modal-overlay' ng-click='hideModal()'></div><div class='ng-modal-dialog' ng-style='dialogStyle'><div class='ng-modal-close' ng-click='hideModal()'>X</div><div class='ng-modal-dialog-content' ng-transclude></div></div></div>"
-    };
-});
