@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('Loading temperature_poller function');
+console.log('Loading output_poller function');
 
 const doc = require('dynamodb-doc');
 const dynamo = new doc.DynamoDB();
