@@ -12,50 +12,49 @@ const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
 
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
-    let msg = '';
 
     if (CLICK_SINGLE == event.clickType) {
         console.log("Received event type " + event.clickType + ", enabling pollers");
-        msg = updateRule("every-minute", true, null, null);
-        updateRule("every-five-minutes", true, msg, callback);
+        updateRule("every-minute", true, callback, false);
+        updateRule("every-five-minutes", true, callback, true);
     } else if (CLICK_DOUBLE == event.clickType) {
         console.log("Received event type " + event.clickType + ", disabling pollers");
-        msg = updateRule("every-minute", false, null, null);
-        updateRule("every-five-minutes", false, msg, callback);
+        updateRule("every-minute", false, callback, false);
+        updateRule("every-five-minutes", false, callback, true);
     } else if (CLICK_LONG == event.clickType) {
-            console.log("Received event type " + event.clickType + ", disabling output poller");
-            updateRule("every-minute", false, null, callback);
+        console.log("Received event type " + event.clickType + ", disabling output poller");
+        updateRule("every-minute", false, callback, true);
     } else {
         console.log("Received event but ignoring.");
         sendNotification("Received event but ignoring.", callback);
     }
 };
 
-function updateRule(ruleName, enable, msg, callback) {
+function updateRule(ruleName, enable, callback, notify) {
     var params = {
         Name: ruleName
     };
 
     if (enable) {
         cloudwatchevents.enableRule(params, function (err, data) {
-            return handleRuleResult(err, data, "enabled", ruleName, msg, callback);
+            handleRuleResult(err, "enabled", ruleName, callback, notify);
         });
     } else {
         cloudwatchevents.disableRule(params, function (err, data) {
-            return handleRuleResult(err, data, "disabled", ruleName, msg, callback);
+            handleRuleResult(err, "disabled", ruleName, callback, notify);
         });
     }
 }
 
-function handleRuleResult(err, data, type, ruleName, msg, callback) {
-    let respMsg = err ? err.message : "Successfully " + type + " rule: " + ruleName;
-    if (err) console.log(respMsg, err.stack);
-    else console.log(respMsg);
+function handleRuleResult(err, type, ruleName, callback, notify) {
+    if (err) {
+        console.log(err.message, err.stack);
+        sendNotification(err.message, callback);
+    } else {
+        console.log("Successfully " + type + " rule: " + ruleName);
+    }
 
-    msg = msg == null ? respMsg : msg + " // " + respMsg;
-
-    if(callback != null) sendNotification(msg, callback);
-    else return msg;
+    if(notify) sendNotification("Successfully " + type + " rules", callback);
 }
 
 function sendNotification(msg, callback) {
