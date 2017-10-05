@@ -11,6 +11,7 @@ const AWS = require('aws-sdk');
 const encryptedHost = process.env['BCS_IP'];
 const encryptedUser = process.env['USER'];
 const encryptedPassword = process.env['PWD'];
+const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
 let decryptedHost;
 let decryptedUser;
 let decryptedPwd;
@@ -63,9 +64,14 @@ function getActiveBrew(event, context, callback) {
             if ((item.brew_complete_date === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.brew_complete_date)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date + " Yeast Pitch: " + item.yeast_pitch);
-                processEvent(event, context, callback, brewDate);
                 break;
             }
+        }
+
+        if (brewDate) {
+            processEvent(event, context, callback, brewDate);
+        } else {
+            sendNotification("Failed to find active brew.  You should disable the pollers to avoid polling charges or create an active brew.", callback);
         }
     });
 }
@@ -98,6 +104,9 @@ function processEvent(event, context, callback, brewDate) {
                     console.log("Results: " + JSON.stringify(results));
                     recordReadings(results, size, brewDate);
                 });
+            }).on("error", (err) => {
+                console.log("Error: " + err.message);
+                sendNotification(err.message, callback);
             });
 
         request.end();
@@ -106,7 +115,7 @@ function processEvent(event, context, callback, brewDate) {
     callback(null, "Completed temp reading capture.");
 }
 
-function recordReadings(results, size, brewDate) {
+function recordReadings(results, size, brewDate, callback) {
     if (results.length === size) {
         var data = JSON.parse("{}");
         results.forEach(function(item) {
@@ -126,8 +135,31 @@ function recordReadings(results, size, brewDate) {
         var paramsStr = JSON.stringify(params);
         console.log("Params to persist: " + paramsStr);
         dynamo.putItem(params, function (err, resp) {
-            var respMsg = err ? err.message : "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+            var respMsg;
+            if (err) {
+                respMsg = err.message;
+                sendNotification(err.message, callback);
+            } else {
+                respMsg = "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+            }
+
             console.log(respMsg);
+
+            if (callback && !err) callback(null, "Completed output reading capture.");
         });
     }
+}
+
+function sendNotification(msg, callback) {
+    let sns = new AWS.SNS();
+
+    sns.publish({
+        Message: msg,
+        TopicArn: IOT_SNS_TOPIC_ARN
+    }, function(err, data) {
+        if (err) console.log(err, err.stack);
+        else console.log('Sent confirmation message: ' + msg);
+
+        if (callback) callback(null, msg);
+    });
 }
