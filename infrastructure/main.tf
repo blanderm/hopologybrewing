@@ -275,11 +275,19 @@ resource "aws_dynamodb_table" "brew_recordings" {
   }
 }
 
+resource "aws_sns_topic" "iot_button_topic" {
+  name = "iot_button_topic"
+}
+
+output "sns_iot_topic_arn" {
+  value = "${aws_sns_topic.iot_button_topic.arn}"
+}
+
 output "region" {
   value = "${var.region}"
 }
 
-output "brewery-key-arn" {
+output "brewery_key_arn" {
   value = "${aws_kms_key.brewery_key.arn}"
 }
 
@@ -376,7 +384,6 @@ output "brewery-key-arn" {
 //
 //resource "aws_api_gateway_deployment" "brew_info_api_deployment" {
 //  depends_on = ["aws_api_gateway_integration.brew_creation_post_lambda_integration"]
-//  //, "aws_api_gateway_integration.brew_creation_options_lambda_integration"]
 //  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
 //  stage_name = "api"
 //
@@ -385,8 +392,4 @@ output "brewery-key-arn" {
 //
 //output "brew_creation_api_url" {
 //  value = "https://${aws_api_gateway_deployment.brew_info_api_deployment.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.brew_info_api_deployment.stage_name}"
-//}
-//
-//output "brew_info_put_arn" {
-//  value = "${var.apex_function_brew_info_put}"
 //}
