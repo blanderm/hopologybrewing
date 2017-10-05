@@ -19,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class TemperatureService extends BcsService {
     private static final Logger log = LoggerFactory.getLogger(TemperatureService.class);
-    private String fileLocation;
     private DbService dbService;
 
     public TemperatureService() {
@@ -32,74 +31,6 @@ public class TemperatureService extends BcsService {
     public TemperatureService(String user, String pwd, String ip) {
         super(user, pwd, ip);
     }
-
-    public Map<String, List<List>> getHistoricalProbeDataFromFile() {
-        String line;
-        BufferedReader reader = null;
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, List<List>> probesMap = new HashMap<>();
-
-        try {
-            TemperatureProbeRecording probeRecording = null;
-            reader = new BufferedReader(new FileReader(fileLocation));
-
-            try {
-                while ((line = reader.readLine()) != null) {
-                    probeRecording = mapper.readValue(line, TemperatureProbeRecording.class);
-
-                    if (probeRecording != null && probeRecording.getData() != null) {
-                        addDataPoint(probesMap, probeRecording.getData().getName(), probeRecording.getTimestamp(), probeRecording.getData().getTemp() / 10);
-
-                        // skip points where the SP isn't set
-                        if (probeRecording.getData().getSetpoint() > 0) {
-                            addDataPoint(probesMap, probeRecording.getData().getName() + "-SP", probeRecording.getTimestamp(), probeRecording.getData().getSetpoint() / 10);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                log.error("Error reading file " + fileLocation + " - ", e);
-            }
-        } catch (FileNotFoundException e) {
-            log.error("File not found for " + fileLocation + " - ", e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    log.error("Failed to close reader for " + fileLocation + " - ", e);
-                }
-            }
-        }
-
-        return probesMap;
-    }
-
-//    public Map<String, List<List>> getHistoricalProbeData(long lower, long upper, int limit) {
-//        Map<String, List<List>> probesMap = new HashMap<>();
-//        List<Recording> recordings = null;
-//        TemperatureProbeRecording probeRecording = null;
-//        List<TemperatureProbe> probes = getEnabledProbes();
-//        for (TemperatureProbe probe : probes) {
-//            // todo: too much leakage from dynamo here, should be able to provide the bean and the service figures it out
-//            // todo: should make a persistence service and have dynamo and file versions to facilitate both flows and abstract AWS
-//            recordings = dbService.queryRecording(TemperatureProbeRecording.class, probe.getName(), lower, upper, limit, true);
-//
-//            for (Recording recording : recordings) {
-//                if (recording instanceof TemperatureProbeRecording) {
-//                    probeRecording = (TemperatureProbeRecording) recording;
-//
-//                    addDataPoint(probesMap, probeRecording.getData().getName(), recording.getTimestamp(), probeRecording.getData().getTemp() / 10);
-//
-//                    // skip points where the SP isn't set
-//                    if (probeRecording.getData().getSetpoint() > 0) {
-//                        addDataPoint(probesMap, probeRecording.getData().getName() + "-SP", recording.getTimestamp(), probeRecording.getData().getSetpoint() / 10);
-//                    }
-//                }
-//            }
-//        }
-//
-//        return probesMap;
-//    }
 
     public Map<String, List<List>> getProbeDataForBrew(long lowerRange, long upperRange) {
         Date date = null;
@@ -165,10 +96,6 @@ public class TemperatureService extends BcsService {
 
     public TemperatureProbe getProbe(String probeId) {
         return (TemperatureProbe) super.getData(BcsService.Type.TEMP, probeId);
-    }
-
-    public void setFileLocation(String fileLocation) {
-        this.fileLocation = fileLocation;
     }
 
     public void setDbService(DbService dbService) {
