@@ -52,22 +52,22 @@ function updateRule(ruleName, enable, msg, callback) {
 
     if (enable) {
         cloudwatchevents.enableRule(params, function (err, data) {
-            handleRuleResult(err, data, "enabled", msg, callback);
+            handleRuleResult(err, data, "enabled", ruleName, msg, callback);
         });
     } else {
         cloudwatchevents.disableRule(params, function (err, data) {
-            handleRuleResult(err, data, "disabled", msg, callback);
+            handleRuleResult(err, data, "disabled", ruleName, msg, callback);
         });
     }
 }
 
-function handleRuleResult(err, data, type, msg, callback) {
-    let respMsg = err ? err.message : "Successfully " + type + " rule: " + params.Name;
+function handleRuleResult(err, data, type, ruleName, msg, callback) {
+    let respMsg = err ? err.message : "Successfully " + type + " rule: " + ruleName;
     if (err) console.log(respMsg, err.stack);
     else console.log(respMsg);
 
     msg = msg == null ? respMsg : msg += " // " + respMsg;
 
-    if(callback) callback(msg);
+    if(callback != null) callback(msg);
     else return msg;
 }
