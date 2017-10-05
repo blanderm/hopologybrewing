@@ -8,9 +8,23 @@ const CLICK_SINGLE = "SINGLE";
 const CLICK_DOUBLE = "DOUBLE";
 const CLICK_LONG = "LONG";
 const BREW_INFO_TABLE_NAME = "brew_info";
+const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
 
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
+
+    let myCallback = function(msg) {
+        let sns = new AWS.SNS();
+
+        sns.publish({
+            Message: msg,
+            TopicArn: IOT_SNS_TOPIC_ARN
+        }, function(err, data) {
+            if (err) console.log(err, err.stack);
+            else console.log('Sent confirmation message: ' + msg);
+            callback(null, null);
+        });
+    };
 
     var brewDate = 0;
     dynamo.scan({TableName: BREW_INFO_TABLE_NAME}, function (err, resp) {
@@ -24,7 +38,7 @@ exports.handler = (event, context, callback) => {
             if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date);
-                processEvent(event, context, callback, brewDate);
+                processEvent(event, context, myCallback, brewDate);
                 break;
             }
         }
