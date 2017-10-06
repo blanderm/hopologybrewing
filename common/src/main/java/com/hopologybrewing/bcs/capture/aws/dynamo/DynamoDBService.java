@@ -37,10 +37,10 @@ public class DynamoDBService implements DbService {
     private static final String BD_CURR_CACHE_KEY = "bd_current_cache_key";
     private static final String BD_RECENT_CACHE_KEY = "bd_recent_cache_key";
     private static final Cache<String, Date> cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(5L, TimeUnit.MINUTES)
+            .expireAfterWrite(30L, TimeUnit.SECONDS)
             .build();
     private static final Cache<String, List<BrewInfo>> brewsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(5L, TimeUnit.MINUTES)
+            .expireAfterWrite(30L, TimeUnit.SECONDS)
             .build();
 
     // todo: create an interface that allows brew creation/initiation and edit
