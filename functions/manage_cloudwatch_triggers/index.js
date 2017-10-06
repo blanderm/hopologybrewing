@@ -13,16 +13,18 @@ const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
 
-    if (CLICK_SINGLE == event.clickType) {
-        console.log("Received event type " + event.clickType + ", enabling pollers");
+    let clickType = (event.clickType ? event.clickType : JSON.parse(event.body).clickType);
+
+    if (CLICK_SINGLE == clickType) {
+        console.log("Received event type " + clickType + ", enabling pollers");
         updateRule("every-minute", true, callback, false);
         updateRule("every-five-minutes", true, callback, true);
-    } else if (CLICK_DOUBLE == event.clickType) {
-        console.log("Received event type " + event.clickType + ", disabling pollers");
+    } else if (CLICK_DOUBLE == clickType) {
+        console.log("Received event type " + clickType + ", disabling pollers");
         updateRule("every-minute", false, callback, false);
         updateRule("every-five-minutes", false, callback, true);
-    } else if (CLICK_LONG == event.clickType) {
-        console.log("Received event type " + event.clickType + ", disabling output poller");
+    } else if (CLICK_LONG == clickType) {
+        console.log("Received event type " + clickType + ", disabling output poller");
         updateRule("every-minute", false, callback, true);
     } else {
         console.log("Received event but ignoring.");
@@ -49,7 +51,7 @@ function updateRule(ruleName, enable, callback, notify) {
 function handleRuleResult(err, type, ruleName, callback, notify) {
     if (err) {
         console.log(err.message, err.stack);
-        sendNotification(err.message, callback);
+        sendNotification(err.message, callback, err);
     } else {
         console.log("Successfully " + type + " rule: " + ruleName);
     }
@@ -57,16 +59,23 @@ function handleRuleResult(err, type, ruleName, callback, notify) {
     if(notify) sendNotification("Successfully " + type + " rules", callback);
 }
 
-function sendNotification(msg, callback) {
+function sendNotification(msg, callback, err) {
     let sns = new AWS.SNS();
 
     sns.publish({
         Message: msg,
         TopicArn: IOT_SNS_TOPIC_ARN
-    }, function(err, data) {
-        if (err) console.log(err, err.stack);
+    }, function(snsErr, data) {
+        if (snsErr) console.log(snsErr, snsErr.stack);
         else console.log('Sent confirmation message: ' + msg);
 
-        if (callback) callback(null, msg);
+        if (callback) callback(null, {
+            statusCode: err ? '400' : '200',
+            body: err ? JSON.stringify(err.message) : JSON.stringify({ message: msg}),
+            headers: {
+                'Content-Type': 'application/json',
+                "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+                "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+            }});
     });
 }

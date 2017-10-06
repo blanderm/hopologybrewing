@@ -42,14 +42,16 @@ function processEvent(event, callback, brewDate) {
         UpdateExpression: "set last_updated = :lu, #an=:av",
     };
 
-    if (CLICK_SINGLE == event.clickType) {
-        console.log("Received event type " + event.clickType + ", inserting timestamp for yeast pitch.");
+    let clickType = (event.clickType ? event.clickType : JSON.parse(event.body).clickType);
+
+    if (CLICK_SINGLE == clickType) {
+        console.log("Received event type " + clickType + ", inserting timestamp for yeast pitch.");
         updateBrewInfo(params, "yeast_pitch", callback);
-    } else if (CLICK_DOUBLE == event.clickType) {
-        console.log("Received event type " + event.clickType + ", inserting timestamp for crash start.");
+    } else if (CLICK_DOUBLE == clickType) {
+        console.log("Received event type " + clickType + ", inserting timestamp for crash start.");
         updateBrewInfo(params, "crash_start", callback);
-    } else if (CLICK_LONG == event.clickType) {
-        console.log("Received event type " + event.clickType + ", inserting timestamp for brew completion date.");
+    } else if (CLICK_LONG == clickType) {
+        console.log("Received event type " + clickType + ", inserting timestamp for brew completion date.");
         updateBrewInfo(params, "brew_completion_date", callback);
     } else {
         console.log("Received event without click type, ignoring.");
@@ -70,19 +72,26 @@ function updateBrewInfo(params, attrName, callback) {
     var paramsStr = JSON.stringify(params);
     console.log("Params to persist: " + paramsStr);
     dynamo.update(params, function (err, resp) {
-        var respMsg = err ? err.message : "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+        var respMsg = err ? err.message : "Updated attribute " + attrName + " with value " + now;
         console.log(respMsg);
-        sendNotifiction(respMsg, callback);
+        sendNotifiction(respMsg, callback, err);
     });
 }
 
-function sendNotifiction(msg, callback) {
+function sendNotifiction(msg, callback, err) {
     sns.publish({
         Message: msg,
         TopicArn: IOT_SNS_TOPIC_ARN
     }, function(err, data) {
         if (err) console.log(err, err.stack);
         else console.log('Sent confirmation message: ' + msg);
-        callback(null, msg);
+        callback(null, {
+            statusCode: err ? '400' : '200',
+            body: err ? JSON.stringify(err.message) : JSON.stringify({ message: msg}),
+            headers: {
+                'Content-Type': 'application/json',
+                "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+                "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+            }});
     });
 }

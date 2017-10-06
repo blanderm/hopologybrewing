@@ -335,12 +335,17 @@ output "brewery_key_arn" {
 //  source_arn = "${aws_cloudwatch_event_rule.every_minute.arn}"
 //}
 //
+////------------
 //// API Gateway Resources
+////------------
+//
+//// Brew Info API
 //resource "aws_api_gateway_rest_api" "brew_info_api" {
 //  name        = "brew_info_api"
 //  description = "API to manage brew info"
 //}
 //
+//// Brew Creation Resource
 //resource "aws_api_gateway_resource" "brew_creation_resource" {
 //  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
 //  parent_id   = "${aws_api_gateway_rest_api.brew_info_api.root_resource_id}"
@@ -353,7 +358,7 @@ output "brewery_key_arn" {
 //  resource_id   = "${aws_api_gateway_resource.brew_creation_resource.id}"
 //  http_method   = "POST"
 //  authorization = "NONE"
-//  depends_on = ["aws_api_gateway_rest_api.brew_info_api"]
+//  depends_on = ["aws_api_gateway_rest_api.brew_info_api", "aws_api_gateway_resource.brew_creation_resource"]
 //}
 //
 //module "brew_creation_cors" {
@@ -363,12 +368,12 @@ output "brewery_key_arn" {
 //  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
 //}
 //
-//resource "aws_lambda_permission" "brew_info_apigateway_permission" {
-//  statement_id = "AllowExecutionFromAPIGateway"
+//resource "aws_lambda_permission" "brew_info_create_permission" {
+//  statement_id = "AllowBrewInfoCreateFromAPIGateway"
 //  action = "lambda:InvokeFunction"
 //  function_name = "${var.apex_function_brew_info_put}"
 //  principal = "apigateway.amazonaws.com"
-//  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.brew_info_api.id}/*/*"
+//  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.brew_info_api.id}/*/POST/create"
 //  depends_on = ["aws_api_gateway_rest_api.brew_info_api"]
 //}
 //
@@ -382,14 +387,116 @@ output "brewery_key_arn" {
 //  depends_on = ["aws_api_gateway_method.brew_creation_post_method"]
 //}
 //
+//// Brew Update Resource
+//resource "aws_api_gateway_resource" "brew_update_resource" {
+//  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
+//  parent_id   = "${aws_api_gateway_rest_api.brew_info_api.root_resource_id}"
+//  path_part   = "update"
+//  depends_on = ["aws_api_gateway_rest_api.brew_info_api"]
+//}
+//
+//resource "aws_api_gateway_method" "brew_update_post_method" {
+//  rest_api_id   = "${aws_api_gateway_rest_api.brew_info_api.id}"
+//  resource_id   = "${aws_api_gateway_resource.brew_update_resource.id}"
+//  http_method   = "POST"
+//  authorization = "NONE"
+//  depends_on = ["aws_api_gateway_rest_api.brew_info_api", "aws_api_gateway_resource.brew_update_resource"]
+//}
+//
+//module "brew_update_cors" {
+//  source = "github.com/kevinthorley/terraform-api-gateway-cors-module"
+//  resource_name = "brew_update_cors"
+//  resource_id = "${aws_api_gateway_resource.brew_update_resource.id}"
+//  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
+//}
+//
+//resource "aws_lambda_permission" "brew_info_update_permission" {
+//  statement_id = "AllowBrewInfoUpdateFromAPIGateway"
+//  action = "lambda:InvokeFunction"
+//  function_name = "${var.apex_function_brew_info_update}"
+//  principal = "apigateway.amazonaws.com"
+//  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.brew_info_api.id}/*/POST/update"
+//  depends_on = ["aws_api_gateway_rest_api.brew_info_api"]
+//}
+//
+//resource "aws_api_gateway_integration" "brew_update_post_lambda_integration" {
+//  rest_api_id   = "${aws_api_gateway_rest_api.brew_info_api.id}"
+//  resource_id   = "${aws_api_gateway_resource.brew_update_resource.id}"
+//  http_method = "${aws_api_gateway_method.brew_update_post_method.http_method}"
+//  integration_http_method = "POST"
+//  type = "AWS_PROXY"
+//  uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.apex_function_brew_info_update}/invocations"
+//  depends_on = ["aws_api_gateway_method.brew_update_post_method"]
+//}
+//
 //resource "aws_api_gateway_deployment" "brew_info_api_deployment" {
-//  depends_on = ["aws_api_gateway_integration.brew_creation_post_lambda_integration"]
+//  depends_on = ["aws_api_gateway_integration.brew_creation_post_lambda_integration", "aws_api_gateway_integration.brew_update_post_lambda_integration"]
 //  rest_api_id = "${aws_api_gateway_rest_api.brew_info_api.id}"
 //  stage_name = "api"
 //
 //  stage_description = "${timestamp()}" // hack to get deployment to update
 //}
 //
-//output "brew_creation_api_url" {
+//output "brew_info_api_url" {
 //  value = "https://${aws_api_gateway_deployment.brew_info_api_deployment.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.brew_info_api_deployment.stage_name}"
+//}
+//
+//// Cloudwatch Trigger API
+//resource "aws_api_gateway_rest_api" "cloudwatch_trigger_api" {
+//  name        = "cloudwatch_trigger_api"
+//  description = "API to manage cloudwatch events"
+//}
+//
+//// Cloudwatch Trigger Resource
+//resource "aws_api_gateway_resource" "cloudwatch_trigger_resource" {
+//  rest_api_id = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}"
+//  parent_id   = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.root_resource_id}"
+//  path_part   = "trigger"
+//  depends_on = ["aws_api_gateway_rest_api.cloudwatch_trigger_api"]
+//}
+//
+//resource "aws_api_gateway_method" "cloudwatch_trigger_post_method" {
+//  rest_api_id   = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}"
+//  resource_id   = "${aws_api_gateway_resource.cloudwatch_trigger_resource.id}"
+//  http_method   = "POST"
+//  authorization = "NONE"
+//  depends_on = ["aws_api_gateway_rest_api.cloudwatch_trigger_api", "aws_api_gateway_resource.cloudwatch_trigger_resource"]
+//}
+//
+//module "cloudwatch_trigger_cors" {
+//  source = "github.com/kevinthorley/terraform-api-gateway-cors-module"
+//  resource_name = "cloudwatch_trigger_cors"
+//  resource_id = "${aws_api_gateway_resource.cloudwatch_trigger_resource.id}"
+//  rest_api_id = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}"
+//}
+//
+//resource "aws_lambda_permission" "cloudwatch_trigger_permission" {
+//  statement_id = "AllowCloudwatchTriggerFromAPIGateway"
+//  action = "lambda:InvokeFunction"
+//  function_name = "${var.apex_function_manage_cloudwatch_triggers}"
+//  principal = "apigateway.amazonaws.com"
+//  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}/*/POST/trigger"
+//  depends_on = ["aws_api_gateway_rest_api.cloudwatch_trigger_api"]
+//}
+//
+//resource "aws_api_gateway_integration" "cloudwatch_trigger_post_lambda_integration" {
+//  rest_api_id   = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}"
+//  resource_id   = "${aws_api_gateway_resource.cloudwatch_trigger_resource.id}"
+//  http_method = "${aws_api_gateway_method.cloudwatch_trigger_post_method.http_method}"
+//  integration_http_method = "POST"
+//  type = "AWS_PROXY"
+//  uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.apex_function_manage_cloudwatch_triggers}/invocations"
+//  depends_on = ["aws_api_gateway_method.cloudwatch_trigger_post_method"]
+//}
+//
+//resource "aws_api_gateway_deployment" "cloudwatch_trigger_deployment" {
+//  depends_on = ["aws_api_gateway_integration.cloudwatch_trigger_post_lambda_integration"]
+//  rest_api_id = "${aws_api_gateway_rest_api.cloudwatch_trigger_api.id}"
+//  stage_name = "api"
+//
+//  stage_description = "${timestamp()}" // hack to get deployment to update
+//}
+//
+//output "cloudwatch_trigger_api_url" {
+//  value = "https://${aws_api_gateway_deployment.cloudwatch_trigger_deployment.rest_api_id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.cloudwatch_trigger_deployment.stage_name}"
 //}

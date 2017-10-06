@@ -1,3 +1,6 @@
+const BREW_INFO_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
+const CLOUDWATCH_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
+
 app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
     .controller('outputController', function ($scope, $http) {
         $http.get('/output').
@@ -248,7 +251,8 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
             if (!brew_name || !month || !day || !year) {
                 $scope.createBrewError = "You must provide a brew name, month, day and year.";
             } else {
-                var url = 'https://38i2h2bygi.execute-api.us-west-2.amazonaws.com/api/create';
+                var url = BREW_INFO_API_URL + '/create';
+                $('#createBrewButton').button('loading');
                 var data = {
                     "month": month,
                     "day": day,
@@ -265,14 +269,58 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
 
                 $http.post(url, data, config).then(function (response) {
                     if (response.data != null) {
+                        $('#createBrewButton').button('reset');
                         $("#createBrewDialog").modal('hide');
                         $scope.createBrewError = undefined;
                     }
                 }, function (error) {
                     console.log(error);
+                    $('#createBrewButton').button('reset');
                     $scope.createBrewError = "Failed to create brew, please try again.";
                 });
             }
+        };
+
+        $scope.updateBrew = function (clickType) {
+            var url = BREW_INFO_API_URL + '/update';
+            $('#brewInfoUpdateButton').button('loading');
+            var data = {
+                "clickType": clickType
+            };
+
+            var config = {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8;'
+                }
+            };
+
+            $http.post(url, data, config).then(function (response) {
+                $('#brewInfoUpdateButton').button('reset');
+            }, function (error) {
+                console.log(error);
+                $('#brewInfoUpdateButton').button('reset');
+            });
+        };
+
+        $scope.triggerCloudWatch = function (clickType) {
+            var url = CLOUDWATCH_API_URL + '/trigger';
+            $('#cloudWatchButton').button('loading');
+            var data = {
+                "clickType": clickType
+            };
+
+            var config = {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8;'
+                }
+            };
+
+            $http.post(url, data, config).then(function (response) {
+                $('#cloudWatchButton').button('reset');
+            }, function (error) {
+                console.log(error);
+                $('#cloudWatchButton').button('reset');
+            });
         };
 
         var chartOptions = {

@@ -22,6 +22,7 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="app.css"/>
         <link rel="stylesheet" href="bower_components/bootstrap-daterangepicker/daterangepicker.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
 
     <body ng-app="hopologybrewing-bcs">
@@ -77,6 +78,25 @@
                                 <div ng-show="crashStart"><b>Started Crash On: </b>{{crashStart}}</div>
                                 <div ng-show="brewCompleteDate"><b>Completed On: </b>{{brewCompleteDate}}</div>
                             </p>
+                            <div class="hr">.</div>
+                            <div class="btn-group">
+                                <button id="brewInfoUpdateButton" type="button" class="btn dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                    Update Dates <span class="caret"></span></button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#" ng-click="updateBrew('SINGLE')">Yeast Pitch</a></li>
+                                    <li><a href="#" ng-click="updateBrew('DOUBLE')">Crash Start</a></li>
+                                    <li><a href="#" ng-click="updateBrew('LONG')">Brew Complete</a></li>
+                                </ul>
+                            </div>
+                            <div class="btn-group">
+                                <button id="cloudWatchButton" type="button" class="btn dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                    Data Polling <span class="caret"></span></button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#" ng-click="triggerCloudWatch('SINGLE')">Enable Polling</a></li>
+                                    <li><a href="#" ng-click="triggerCloudWatch('LONG')">Disable Output Polling</a></li>
+                                    <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')">Disable All Polling</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -94,6 +114,7 @@
                                                 <h4 class="modal-title">Create Brew</h4>
                                             </div>
                                             <div class="modal-body">
+                                                <p ng-show="createBrewError" class="error"><b>Error:</b> {{createBrewError}}</p>
                                                 <div>
                                                     <form role="form">
                                                         <div class="form-group">
@@ -121,7 +142,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="submit" class="btn bton-block pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                                                <button id="createBrew" type="submit" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn btn-block pull-right">Create Brew</button>
+                                                <button id="createBrewButton" type="submit" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn btn-block pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">Create Brew</button>
                                             </div>
                                         </div>
                                     </div>
