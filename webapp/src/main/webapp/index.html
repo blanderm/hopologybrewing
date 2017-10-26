@@ -25,32 +25,84 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
 
-    <body ng-app="hopologybrewing-bcs">
-        <div class="panel panel-default">
-            <div class="panel-body" ng-controller="brewController">
-                <div class="panel panel-default center">
-                    <div class="panel-body" style="display: inline-block;">
-                        <div class="pull-left">
-                            <div class="center" ng-controller="gaugeController">
-                                 <span ng-repeat="options in gaugeOptions">
-                                    <div id="{{'temp-gauge' + $index}}" class="gauge" style="display: inline-block;">{{ renderGauges('temp-gauge' + $index, options) }}</div>
-                                 </span>
-                            </div>
+    <body ng-app="brewing-bcs">
+        <div class="container" ng-controller="brewController">
+            <div class="row">
+                <div class="col-sm-12">
+                    <span>&nbsp;</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4" ng-controller="tempPidController">
+                     <div ng-repeat="probe in probes" class="text-center">
+                         <div class="panel panel-default">
+                             <div class="panel-body" ng-controller="outputController">
+                                 <div class="well">
+                                     <h1>{{probe.reading}} <small>{{probe.setpoint}} SP</small></h1>
+                                     <small class="pull-right">{{probe.name}}</small>
+                                 </div>
+                                 <button id="{{'output' + $index}}" type="button" ng-show="outputs.length >= $index" data-ng-class="[outputs[$index].on ? 'btn btn-lg btn-success' : 'btn btn-lg btn-primary']" ng-bind="outputs[$index].name"/>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <div class="panel panel-default" ng-show="selectedBrew">
+                                    <div class="panel-heading"><b>{{selectedBrew.name}}</b></div>
+                                    <div class="panel-body">
+                                        <p>{{selectedBrew.description}}</p>
+                                    </div>
 
-                            <div ng-controller="outputController" class="clear center pad">
-                                    <span ng-repeat="output in outputs" class="lrpad" style="display: inline-block;">
-                                        <button id="{{'output' + $index}}" data-ng-class="[output.on ? 'btn btn-on' : 'btn']" ng-bind="output.name"/>
-                                    </span>
+                                    <!-- Table -->
+                                    <table class="table" ng-show="yeastPitch || crashStart || brewCompleteDate">
+                                        <tr ng-show="yeastPitch"><td><span class="glyphicon glyphicon-play"></span></td><td>Pitched on {{yeastPitch}}</td><td><a href="#" ng-click="updateBrew('SINGLE')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                        <tr ng-show="crashStart"><td><span class="glyphicon glyphicon-flash"></span></td><td>Crashed on {{crashStart}}</td><td><a href="#" ng-click="updateBrew('DOUBLE')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                        <tr ng-show="brewCompleteDate"><td><span class="glyphicon glyphicon-check"></span></td><td>Completed on {{brewCompleteDate}}</td><td><a href="#" ng-click="updateBrew('LONG')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="btn-group btn-group pull-right" role="group">
+                                    <div class="btn-group btn-group" role="group">
+                                        <button id="cloudWatchButton" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                            Polling <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#" ng-click="triggerCloudWatch('SINGLE')"><span class="glyphicon glyphicon-refresh"></span> Enable Polling</a></li>
+                                            <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable Output Polling</a></li>
+                                            <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="btn-group btn-group" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">
+                                        <button id="brewInfoUpdateButton" type="button" class="btn btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                            Batch Dates <span class="caret"></span></button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#" ng-click="updateBrew('SINGLE')"><span class="glyphicon glyphicon-play"></span> Set Yeast Pitch</a></li>
+                                            <li><a href="#" ng-click="updateBrew('DOUBLE')"><span class="glyphicon glyphicon-flash"></span> Set Crash Start</a></li>
+                                            <li><a href="#" ng-click="updateBrew('LONG')"><span class="glyphicon glyphicon-check"></span> Set Brew Complete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <div  class="pull-left pad center" ng-controller="currentStateController" style="width: 300px" ng-show="activeProcesses.length != 0">
-                                <div id="{{'currentState' + $index}}" ng-repeat="process in activeProcesses">
-                                    <h2><a data-toggle="modal" data-target="{{'#processStates' + $index}}">{{ process.name }}</a></h2>
-                                    <div><b>Active State:</b> {{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></div>
-                                    <div><b>Active Timer ({{ process.statesObj[process.current_state.state].timers[0].count_up ? 'up' : 'dn'}}):</b> {{ convertTimerValue(process.statesObj[process.current_state.state].timers[0].value) }}</div>
-                                    <div ng-show="!process.nextState.startsWith('State ')"><b>Next State:</b> {{ process.nextState ? process.nextState : "(no exit condition set)"}}</div>
-
+                        <div class="row">
+                            <div class="col-sm-8" ng-controller="currentStateController">
+                                <table class="table" ng-show="activeProcesses.length != 0">
+                                    <tr>
+                                        <th>Process</th>
+                                        <th>Active State</th>
+                                        <th>Active Timer</th>
+                                        <th>Next State</th>
+                                    </tr>
+                                    <tr id="{{'currentState' + $index}}" ng-repeat="process in activeProcesses" ng-show="activeProcesses.length != 0">
+                                        <td><a data-toggle="modal" data-target="{{'#processStates' + $index}}">{{ process.name }}</a></td>
+                                        <td>{{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></td>
+                                        <td>{{ convertTimerValue(process.statesObj[process.current_state.state].timers[0].value) }} ({{ process.statesObj[process.current_state.state].timers[0].count_up ? 'up' : 'dn'}})</td>
+                                        <td ng-show="!process.nextState.startsWith('State ')">{{ process.nextState ? process.nextState : "(no exit condition set)"}}</td>
+                                    </tr>
                                     <div id="{{'processStates' + $index}}" class="modal fade" role="dialog">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
@@ -68,86 +120,63 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                        </div>
-                        <div  class="pull-left pad" style="width: 300px" ng-show="selectedBrew">
-                            <h2 title="Brewed on {{brewDate}}">{{selectedBrew.name}}</h2>
-                            <p class="pull-left" style="word-wrap: break-word">{{selectedBrew.description}}</p>
-                            <p class="clear">
-                                <div ng-show="yeastPitch"><b>Pitched On: </b>{{yeastPitch}}</div>
-                                <div ng-show="crashStart"><b>Started Crash On: </b>{{crashStart}}</div>
-                                <div ng-show="brewCompleteDate"><b>Completed On: </b>{{brewCompleteDate}}</div>
-                            </p>
-                            <div class="hr">.</div>
-                            <div class="btn-group">
-                                <button id="brewInfoUpdateButton" type="button" class="btn dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
-                                    Update Dates <span class="caret"></span></button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a href="#" ng-click="updateBrew('SINGLE')">Yeast Pitch</a></li>
-                                    <li><a href="#" ng-click="updateBrew('DOUBLE')">Crash Start</a></li>
-                                    <li><a href="#" ng-click="updateBrew('LONG')">Brew Complete</a></li>
-                                </ul>
-                            </div>
-                            <div class="btn-group">
-                                <button id="cloudWatchButton" type="button" class="btn dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
-                                    Data Polling <span class="caret"></span></button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a href="#" ng-click="triggerCloudWatch('SINGLE')">Enable Polling</a></li>
-                                    <li><a href="#" ng-click="triggerCloudWatch('LONG')">Disable Output Polling</a></li>
-                                    <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')">Disable All Polling</a></li>
-                                </ul>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div>
-                    <div class="clear pull-right">
-                        <span>
-                            <span style="display: inline-block;">
-                                <h4><a data-toggle="modal" class="glyphicon glyphicon-plus" data-target="#createBrewDialog" title="Create Brew"></a></h4>
-                                <div id="createBrewDialog" class="modal fade" role="dialog">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">Create Brew</h4>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="hr">.</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="clearfix pull-right">
+                        <span style="display: inline-block;">
+                            <h4><a data-toggle="modal" class="glyphicon glyphicon-plus" data-target="#createBrewDialog" title="Create Brew"></a></h4>
+                            <div id="createBrewDialog" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Create Brew</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p ng-show="createBrewError" class="error"><b>Error:</b> {{createBrewError}}</p>
+                                            <div>
+                                                <form role="form">
+                                                    <div class="form-group">
+                                                      <label for="brew_name">Name: </label>
+                                                      <input type="text" id="brew_name" class="form-control" ng-model="brew_name" placeholder="Name of the brew">
+                                                    </div>
+                                                    <div class="form-group">
+                                                      <label for="brew_description">Description: </label>
+                                                      <input type="text" id="brew_description" class="form-control" ng-model="brew_description" placeholder="Description of the brew">
+                                                    </div>
+                                                    <div class="form-group">
+                                                      <label for="month">Month: </label>
+                                                      <input type="text" id="month" class="form-control" ng-model="month" placeholder="Month of the brew day">
+                                                    </div>
+                                                    <div class="form-group">
+                                                      <label for="day">Day: </label>
+                                                      <input type="text" id="day" class="form-control" ng-model="day" placeholder="Day of the month of the brew day">
+                                                    </div>
+                                                    <div class="form-group">
+                                                      <label for="year">Year: </label>
+                                                      <input type="text" id="year" class="form-control" ng-model="year" placeholder="Year of the brew day">
+                                                    </div>
+                                                  </form>
                                             </div>
-                                            <div class="modal-body">
-                                                <p ng-show="createBrewError" class="error"><b>Error:</b> {{createBrewError}}</p>
-                                                <div>
-                                                    <form role="form">
-                                                        <div class="form-group">
-                                                          <label for="brew_name">Name: </label>
-                                                          <input type="text" id="brew_name" class="form-control" ng-model="brew_name" placeholder="Name of the brew">
-                                                        </div>
-                                                        <div class="form-group">
-                                                          <label for="brew_description">Description: </label>
-                                                          <input type="text" id="brew_description" class="form-control" ng-model="brew_description" placeholder="Description of the brew">
-                                                        </div>
-                                                        <div class="form-group">
-                                                          <label for="month">Month: </label>
-                                                          <input type="text" id="month" class="form-control" ng-model="month" placeholder="Month of the brew day">
-                                                        </div>
-                                                        <div class="form-group">
-                                                          <label for="day">Day: </label>
-                                                          <input type="text" id="day" class="form-control" ng-model="day" placeholder="Day of the month of the brew day">
-                                                        </div>
-                                                        <div class="form-group">
-                                                          <label for="year">Year: </label>
-                                                          <input type="text" id="year" class="form-control" ng-model="year" placeholder="Year of the brew day">
-                                                        </div>
-                                                      </form>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn bton-block pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
-                                                <button id="createBrewButton" type="submit" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn btn-block pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">Create Brew</button>
-                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                                            <button id="createBrewButton" type="button" ng-click="createBrew(brew_name, brew_description, month, day, year)" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">Create Brew</button>
                                         </div>
                                     </div>
                                 </div>
-                            </span>
+                            </div>
                         </span>
                     </div>
                     <div class="pull-right">&nbsp;&nbsp;</div>
@@ -157,10 +186,17 @@
                     <div class="pull-left">
                         <h4>Date Range: <input date-range-picker class="date-picker small-pad" ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" min="dateMin" max="dateMax" type="text" ng-model="datePicker" options="datePickerOptions" /></h4>
                     </div>
-                    <div class="clear">
-                        <div id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-                        <div id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 clearfix">
+                    <div id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                 </div>
             </div>
         </div>

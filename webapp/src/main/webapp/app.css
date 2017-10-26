@@ -1,61 +1,19 @@
-.btn {
-    background-color: #008CBA;
-    height: 55px;
-    width: 150px;
-    border: none;
-    color: white;
-    padding: 12px 28px;
-    margin: 4px 4px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    float: left;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+h1 {
+    color: green;
+    font-size: 50px
 }
 
-.btn-on {
-    background-color: #4CAF50; /* Green */
-    border: none;
-    color: white;
-    padding: 12px 28px;
-    margin: 4px 4px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    float: left;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-}
-
-.btn-gray {
-    background-color: #C0C0C0; /* Green */
-    color: black;
-}
-
-.btn-gray:hover {
-    background-color: #C0C0C0; /* Green */
-    color: #696969;
+h1 small {
+    color: gray;
+    font-size: 20px
 }
 
 .state-list-on {
     color: #4CAF50;
 }
 
-.clear {
-    clear: both;
-}
-
-.gauge {
-    width: 250px;
-    height: 300px;
-}
-
-.pad {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 10px;
-    padding-right: 10px;
+.margin {
+    margin: 10px;
 }
 
 .hr {
@@ -63,20 +21,14 @@
     font-size: 1px;
     color: #000000;
     line-height: 1px;
-
     background-color: grey;
-    margin-top: -6px;
+    margin-top: 10px;
     margin-bottom: 10px;
 }
 
 .center {
     margin: auto;
     text-align: center;
-}
-
-.lrpad {
-    padding-left: 42px;
-    padding-right: 42px;
 }
 
 .small-pad {

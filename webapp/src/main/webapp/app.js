@@ -1,7 +1,7 @@
 const BREW_INFO_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
 const CLOUDWATCH_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
 
-app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
+app = angular.module('brewing-bcs', ['daterangepicker'])
     .controller('outputController', function ($scope, $http) {
         $http.get('/output').
         then(function (response) {
@@ -79,117 +79,21 @@ app = angular.module('hopologybrewing-bcs', ['daterangepicker'])
         };
     })
 
-    .controller('gaugeController', function ($scope, $http) {
-        $scope.generateOptions = function() {
-            $http.get('/temp').then(function (response) {
-                // find active process and get current state
-                $scope.gaugeOptions = [];
-                for (var i = 0; i < response.data.length; i++) {
-                    $http.get('/temp/' + i).then(function (response) {
-                        var probeId = response.config.url.split('/')[2];
+    .controller('tempPidController', function ($scope, $http) {
+        $http.get('/temp').then(function (response) {
+            // find active process and get current state
+            $scope.probes = [];
 
-                        $scope.gaugeOptions[probeId] = {
-                            chart: {
-                                type: 'gauge',
-                                plotBackgroundColor: null,
-                                plotBackgroundImage: null,
-                                plotBorderWidth: 0,
-                                plotShadow: false
-                            },
-
-                            exporting: {
-                                enabled: false
-                            },
-
-                            title: {
-                                text: response.data[0].name + "<br>(" + response.data[0].setpoint + " SP)"
-                            },
-
-                            pane: {
-                                startAngle: -150,
-                                endAngle: 150,
-                                background: [{
-                                    backgroundColor: {
-                                        linearGradient: {x1: 0, y1: 0, x2: 0, y2: 1},
-                                        stops: [
-                                            [0, '#FFF'],
-                                            [1, '#333']
-                                        ]
-                                    },
-                                    borderWidth: 0,
-                                    outerRadius: '109%'
-                                }, {
-                                    backgroundColor: {
-                                        linearGradient: {x1: 0, y1: 0, x2: 0, y2: 1},
-                                        stops: [
-                                            [0, '#333'],
-                                            [1, '#FFF']
-                                        ]
-                                    },
-                                    borderWidth: 1,
-                                    outerRadius: '107%'
-                                }, {
-                                    // default background
-                                }, {
-                                    backgroundColor: '#DDD',
-                                    borderWidth: 0,
-                                    outerRadius: '105%',
-                                    innerRadius: '103%'
-                                }]
-                            },
-
-                            // the value axis
-                            yAxis: {
-                                min: 35,
-                                max: 80,
-
-                                minorTickInterval: 'auto',
-                                minorTickWidth: 1,
-                                minorTickLength: 10,
-                                minorTickPosition: 'inside',
-                                minorTickColor: '#666',
-
-                                tickPixelInterval: 30,
-                                tickWidth: 2,
-                                tickPosition: 'inside',
-                                tickLength: 10,
-                                tickColor: '#666',
-                                labels: {
-                                    step: 2,
-                                    rotation: 'auto'
-                                },
-                                plotBands: [{
-                                    from: 65,
-                                    to: 70,
-                                    color: '#606060'
-                                },
-                                    {
-                                        from: ((response.data[0].setpoint > 0) ? (response.data[0].setpoint - 0.25) : 68),
-                                        to: ((response.data[0].setpoint > 0) ? (response.data[0].setpoint + 0.25) : 68),
-                                        color: ((response.data[0].setpoint > 0) ? '#55BF3B' : '#606060')
-                                    }]
-                            },
-                            series: response.data
-                        };
+            for (var i = 0; i < response.data.length; i++) {
+                $http.get('/temp/' + i).then(function (response) {
+                    $scope.probes.push({
+                       name : response.data[0].name,
+                       reading : response.data[0].data[0],
+                       setpoint: response.data[0].setpoint
                     });
-                }
-            });
-        };
-
-        $scope.generateOptions();
-        var divIds = [];
-        $scope.renderGauges = function(divId, options) {
-            divIds.push(divId);
-            chart = $('#' + divId).highcharts(options);
-        };
-
-        $scope.reloadGauges = function() {
-            $scope.generateOptions();
-
-            for (var i=0; i < divIds.length; i++) {
-                $scope.renderGauges(divIds[i], $scope.gaugeOptions[i]);
+                });
             }
-        };
+        });
     })
 
     .controller('brewController', function ($scope, $http) {
