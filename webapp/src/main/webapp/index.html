@@ -38,7 +38,7 @@
                          <div class="panel panel-default">
                              <div class="panel-body" ng-controller="outputController">
                                  <div class="well">
-                                     <h1>{{probe.reading}} <small>{{probe.setpoint}} SP</small></h1>
+                                     <h2>{{probe.reading}} <small>{{probe.setpoint}} SP</small></h2>
                                      <small class="pull-right">{{probe.name}}</small>
                                  </div>
                                  <button id="{{'output' + $index}}" type="button" ng-show="outputs.length >= $index" data-ng-class="[outputs[$index].on ? 'btn btn-lg btn-success' : 'btn btn-lg btn-primary']" ng-bind="outputs[$index].name"/>
@@ -50,17 +50,54 @@
                     <div class="container">
                         <div class="row">
                             <div class="col-sm-5">
+                                <div ng-show="!selectedBrew">
+                                    <h1 class="text-dark">Get Started</h1>
+                                    <h3><a data-toggle="modal" data-target="#createBrewDialog"><span class="glyphicon glyphicon-plus text-success"></span> Create a brew</a></h3>
+                                </div>
                                 <div class="panel panel-default" ng-show="selectedBrew">
-                                    <div class="panel-heading"><b>{{selectedBrew.name}}</b></div>
+                                    <div class="panel-heading">
+                                        <h4 class="pull-left">{{selectedBrew.name}} <small>brewed on {{brewDate}}</small></h4>
+                                        <h4 class="pull-right"><a data-toggle="modal" class="glyphicon glyphicon-edit" data-target="#editBrewDialog" title="Edit Brew"></a></h4>
+                                        <div class="clearfix"></div>
+                                        <div id="editBrewDialog" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 class="modal-title">Edit Batch Brewed On {{brewDate}}</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p ng-show="createBrewError" class="error"><b>Error:</b> {{editBrewError}}</p>
+                                                        <div>
+                                                            <form role="form">
+                                                                <div class="form-group">
+                                                                    <label for="brew_name">Name: </label>
+                                                                    <input type="text" id="brew_name" class="form-control" ng-model="selectedBrew.name" placeholder="Name of the brew">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="brew_description">Description: </label>
+                                                                    <input type="text" id="brew_description" class="form-control" ng-model="selectedBrew.description" placeholder="Description of the brew">
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+                                                        <button id="editBrewButton" type="button" ng-click="editBrew(selectedBrew)" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">Update Brew</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="panel-body">
                                         <p>{{selectedBrew.description}}</p>
                                     </div>
 
                                     <!-- Table -->
                                     <table class="table" ng-show="yeastPitch || crashStart || brewCompleteDate">
-                                        <tr ng-show="yeastPitch"><td><span class="glyphicon glyphicon-play"></span></td><td>Pitched on {{yeastPitch}}</td><td><a href="#" ng-click="updateBrew('SINGLE')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
-                                        <tr ng-show="crashStart"><td><span class="glyphicon glyphicon-flash"></span></td><td>Crashed on {{crashStart}}</td><td><a href="#" ng-click="updateBrew('DOUBLE')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
-                                        <tr ng-show="brewCompleteDate"><td><span class="glyphicon glyphicon-check"></span></td><td>Completed on {{brewCompleteDate}}</td><td><a href="#" ng-click="updateBrew('LONG')"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                        <tr ng-show="yeastPitch"><td><span class="glyphicon glyphicon-play"></span></td><td>Pitched on {{yeastPitch}}</td><td><a href="#" ng-click="updateBrew('SINGLE')" title="Set Yeast Pitch to NOW"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                        <tr ng-show="crashStart"><td><span class="glyphicon glyphicon-flash"></span></td><td>Crashed on {{crashStart}}</td><td><a href="#" ng-click="updateBrew('DOUBLE')" title="Set Crash Start to NOW"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
+                                        <tr ng-show="brewCompleteDate"><td><span class="glyphicon glyphicon-check"></span></td><td>Completed on {{brewCompleteDate}}</td><td><a href="#" ng-click="updateBrew('LONG')"title="Set Brew Complete Date to NOW" ><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
                                     </table>
                                 </div>
                             </div>

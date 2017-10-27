@@ -24,22 +24,22 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
         then(function (response) {
             // find active process and get current state
             if (response.data != null) {
-                var enabledProcesses = [];
+                let enabledProcesses = [];
                 $scope.activeProcesses = [];
 
-                for (var i = 0; i < response.data.length; i++) {
+                for (let i = 0; i < response.data.length; i++) {
                     if (response.data[i]) {
                         enabledProcesses.push(i);
                     }
                 }
 
-                for (var j = 0; j < enabledProcesses.length; j++) {
+                for (let j = 0; j < enabledProcesses.length; j++) {
                     $http.get('/process/'.concat(enabledProcesses[j]).concat('/current_state')).
                     then(function (processStateResponse) {
-                        var exitConditions = processStateResponse.data.statesObj[processStateResponse.data.current_state.state].exitConditions;
+                        let exitConditions = processStateResponse.data.statesObj[processStateResponse.data.current_state.state].exitConditions;
 
                         if (exitConditions != null) {
-                            for (var k = 0; k < exitConditions.length; k++) {
+                            for (let k = 0; k < exitConditions.length; k++) {
                                 processStateResponse.data.nextState = processStateResponse.data.states[exitConditions[k].next_state];
                             }
                         }
@@ -52,9 +52,9 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
 
         $scope.convertTimerValue = function (value) {
             // days
-            var calculatedTimer = value / 10 / 60 / 60 / 24;
-            var strTimer = "";
-            var floor;
+            let calculatedTimer = value / 10 / 60 / 60 / 24;
+            let strTimer = "";
+            let floor;
 
             floor = Math.floor(calculatedTimer);
             if (floor >= 1) {
@@ -84,13 +84,13 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             // find active process and get current state
             $scope.probes = [];
 
-            for (var i = 0; i < response.data.length; i++) {
+            for (let i = 0; i < response.data.length; i++) {
                 $http.get('/temp/' + i).then(function (response) {
-                    $scope.probes.push({
+                    $scope.probes[i] = {
                        name : response.data[0].name,
                        reading : response.data[0].data[0],
                        setpoint: response.data[0].setpoint
-                    });
+                    };
                 });
             }
         });
@@ -100,16 +100,16 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
         $http.get('/brews').
         then(function (response) {
             $scope.brews = response.data.brews;
-            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
 
+            $scope.selectedBrew = response.data.brews[response.data.mostRecent];
             $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
 
             if ($scope.selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
             if ($scope.selectedBrew.yeastPitch) $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
             if ($scope.selectedBrew.crashStart) $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
 
-            var startDate = null;
-            var endDate = null;
+            let startDate = null;
+            let endDate = null;
             if ($scope.selectedBrew && $scope.selectedBrew.brewCompleteDate > 0) {
                 // if brew is complete, render all data
                 endDate = moment($scope.selectedBrew.brewCompleteDate);
@@ -155,17 +155,17 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             if (!brew_name || !month || !day || !year) {
                 $scope.createBrewError = "You must provide a brew name, month, day and year.";
             } else {
-                var url = BREW_INFO_API_URL + '/create';
+                let url = BREW_INFO_API_URL + '/create';
                 $('#createBrewButton').button('loading');
-                var data = {
-                    "month": month,
+                let data = {
+                    "month": month - 1,
                     "day": day,
                     "year": year,
                     "description": brew_description,
                     "name": brew_name
                 };
 
-                var config = {
+                let config = {
                     headers: {
                         'Content-Type': 'application/json;charset=utf-8;'
                     }
@@ -185,14 +185,75 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             }
         };
 
+        $scope.editBrew = function (brew) {
+            if (!brew.name) {
+                $scope.editBrewError = "You must provide a brew name.";
+            } else {
+                console.log(brew.brewDate);
+                let brew_date = moment(brew.brewDate);
+                console.log(brew_date);
+                let url = BREW_INFO_API_URL + '/create';
+                $('#editBrewButton').button('loading');
+                let addlAttrs = [];
+                if (brew.yeastPitch) {
+                    addlAttrs.push({
+                        "name" : "yeast_pitch",
+                        "value" : brew.yeastPitch
+                    })
+                }
+
+                if (brew.crashStart) {
+                    addlAttrs.push({
+                        "name" : "crash_start",
+                        "value" : brew.crashStart
+                    })
+                }
+
+                if (brew.brewCompleteDate) {
+                    addlAttrs.push({
+                        "name" : "brew_completion_date",
+                        "value" : brew.brewCompleteDate
+                    })
+                }
+
+                let data = {
+                    "month": brew_date.format("M") - 1,
+                    "day": brew_date.format("D"),
+                    "year": brew_date.format("YYYY"),
+                    "description": brew.description,
+                    "name": brew.name,
+                    "additionalAttributes" : addlAttrs
+                };
+
+                let config = {
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8;'
+                    }
+                };
+
+                console.log(data);
+                $http.post(url, data, config).then(function (response) {
+                    if (response.data != null) {
+                        $('#editBrewButton').button('reset');
+                        $("#editBrewDialog").modal('hide');
+                        $scope.editBrewError = undefined;
+                    }
+                }, function (error) {
+                    console.log(error);
+                    $('#editBrewButton').button('reset');
+                    $scope.editBrewError = "Failed to update brew, please try again.";
+                });
+            }
+        };
+
         $scope.updateBrew = function (clickType) {
-            var url = BREW_INFO_API_URL + '/update';
+            let url = BREW_INFO_API_URL + '/update';
             $('#brewInfoUpdateButton').button('loading');
-            var data = {
+            let data = {
                 "clickType": clickType
             };
 
-            var config = {
+            let config = {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8;'
                 }
@@ -207,13 +268,13 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
         };
 
         $scope.triggerCloudWatch = function (clickType) {
-            var url = CLOUDWATCH_API_URL + '/trigger';
+            let url = CLOUDWATCH_API_URL + '/trigger';
             $('#cloudWatchButton').button('loading');
-            var data = {
+            let data = {
                 "clickType": clickType
             };
 
-            var config = {
+            let config = {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8;'
                 }
