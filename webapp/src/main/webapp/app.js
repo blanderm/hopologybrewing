@@ -189,9 +189,7 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             if (!brew.name) {
                 $scope.editBrewError = "You must provide a brew name.";
             } else {
-                console.log(brew.brewDate);
                 let brew_date = moment(brew.brewDate);
-                console.log(brew_date);
                 let url = BREW_INFO_API_URL + '/create';
                 $('#editBrewButton').button('loading');
                 let addlAttrs = [];
@@ -231,7 +229,6 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                     }
                 };
 
-                console.log(data);
                 $http.post(url, data, config).then(function (response) {
                     if (response.data != null) {
                         $('#editBrewButton').button('reset');
