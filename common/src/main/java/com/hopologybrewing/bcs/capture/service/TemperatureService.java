@@ -24,14 +24,6 @@ public class TemperatureService extends BcsService {
     public TemperatureService() {
     }
 
-    public TemperatureService(String user, String pwd) {
-        super(user, pwd);
-    }
-
-    public TemperatureService(String user, String pwd, String ip) {
-        super(user, pwd, ip);
-    }
-
     public Map<String, List<List>> getProbeDataForBrew(long lowerRange, long upperRange) {
         Date date = null;
         try {

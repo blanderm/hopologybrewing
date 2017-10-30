@@ -17,7 +17,7 @@ import java.util.List;
  * Created by ddcbryanl on 12/6/16.
  */
 @RestController
-public class ProcessController extends BcsService {
+public class ProcessController {
     private static final Logger log = LoggerFactory.getLogger(ProcessController.class);
     private ProcessService processService;
 

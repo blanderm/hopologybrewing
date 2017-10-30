@@ -19,7 +19,6 @@ public abstract class BcsService {
     private static final Logger log = LoggerFactory.getLogger(BcsService.class);
     private static Map<Type, String> urlMap = null;
     private static Map<Type, Class> classMap = null;
-    private RestTemplate template;
     private String bcsIp;
 
     static {
@@ -48,27 +47,11 @@ public abstract class BcsService {
         classMap = Collections.unmodifiableMap(clz);
     }
 
-    private AtomicBoolean alertEnabled = new AtomicBoolean(true);
-
     public BcsService() {
         bcsIp = System.getProperty(BcsConstants.BCS_IP);
         if (StringUtils.isEmpty(bcsIp)) {
             bcsIp = System.getenv(BcsConstants.BCS_IP);
         }
-    }
-
-    public BcsService(String user, String pwd) {
-        bcsIp = System.getProperty(BcsConstants.BCS_IP);
-        if (StringUtils.isEmpty(bcsIp)) {
-            bcsIp = System.getenv(BcsConstants.BCS_IP);
-        }
-
-        this.template = new BasicAuthRestTemplate(user, pwd);
-    }
-
-    public BcsService(String user, String pwd, String ip) {
-        this.template = new BasicAuthRestTemplate(user, pwd);
-        bcsIp = ip;
     }
 
     public Object getData(Type type, String... ids) {
@@ -77,7 +60,6 @@ public abstract class BcsService {
 
         try {
             RestTemplate template = new BasicAuthRestTemplate();
-            String bcsIp = System.getProperty(BcsConstants.BCS_IP);
             response = template.getForEntity("http://" + bcsIp + String.format(urlMap.get(type), ids), classMap.get(type));
             obj = response.getBody();
         } catch (Throwable t) {
@@ -85,16 +67,6 @@ public abstract class BcsService {
         }
 
         return obj;
-    }
-
-    public void toggleAlerting() {
-        boolean currentState = alertEnabled.get();
-        log.info("Setting alerting to " + (!currentState ? "on" : "off"));
-        alertEnabled.set(!currentState);
-    }
-
-    public boolean getAlertStatus() {
-        return alertEnabled.get();
     }
 
     public enum Type {TEMP, TEMPS, PROCESS, PROCESSES, STATE, TIMER, OUTPUT, OUTPUTS, EXIT_CONDITIONS}

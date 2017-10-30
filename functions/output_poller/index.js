@@ -12,6 +12,7 @@ const encryptedHost = process.env['BCS_IP'];
 const encryptedUser = process.env['USER'];
 const encryptedPassword = process.env['PWD'];
 const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
+const SOCKET_TIMEOUT = 250;
 let decryptedHost;
 let decryptedUser;
 let decryptedPwd;
@@ -52,14 +53,14 @@ exports.handler = (event, context, callback) => {
 };
 
 function getActiveBrew(event, context, callback) {
-    var brewDate = 0;
+    let brewDate = 0;
     dynamo.scan({TableName: "brew_info"}, function (err, resp) {
-        var response = err ? err.message : JSON.parse(JSON.stringify(resp));
+        let response = err ? err.message : JSON.parse(JSON.stringify(resp));
         console.log("Raw response from scan: " + JSON.stringify(response));
 
-        var now = new Date().getTime();
-        var item;
-        for (var i = 0; i < response.Items.length; i++) {
+        let now = new Date().getTime();
+        let item;
+        for (let i = 0; i < response.Items.length; i++) {
             item = response.Items[i];
             if ((item.crash_start === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.crash_start)) {
                 brewDate = item.brew_date;
@@ -77,28 +78,29 @@ function getActiveBrew(event, context, callback) {
 }
 
 function processEvent(event, context, callback, brewDate) {
-    var results = [];
-    var size = 2;
-    for (var i = 0; i < size; i++) {
-        var request = http.request({
+    let results = [];
+    let size = 2;
+    for (let i = 0; i < size; i++) {
+        let request = http.request({
                 host: decryptedHost,
                 auth: decryptedUser + ':' + decryptedPwd,
                 path: '/api/output/' + i,
                 port: '80',
-                method: 'GET'
+                method: 'GET',
+                timeout: SOCKET_TIMEOUT
             },
             function (response) {
                 console.log('STATUS: ' + response.statusCode);
                 console.log('HEADERS: ' + JSON.stringify(response.headers));
                 response.setEncoding('utf8');
-                var rawData = '';
+                let rawData = '';
                 response.on('data', function (chunk) {
                     rawData += chunk;
                     console.log("data: " + rawData);
                 });
 
                 response.on('end', () => {
-                    var parsedData = JSON.parse(rawData);
+                    let parsedData = JSON.parse(rawData);
                     results.push(parsedData);
                     console.log("Data received from controller: " + JSON.stringify(parsedData));
                     console.log("Results: " + JSON.stringify(results));
@@ -106,7 +108,11 @@ function processEvent(event, context, callback, brewDate) {
                 });
             }).on("error", (err) => {
                 console.log("Error: " + err.message);
-                sendNotification(err.message, callback);
+                sendNotification("Output Poller :: Error: " + err.message, callback);
+            }).on('timeout', () => {
+                console.log("Request timed out obtaining BCS data.");
+                request.abort();
+                sendNotification("Output Poller :: Request timed out obtaining BCS data.", callback);
             });
 
         request.end();
@@ -115,8 +121,8 @@ function processEvent(event, context, callback, brewDate) {
 
 function recordReadings(results, size, brewDate, callback) {
     if (results.length === size) {
-        var data = JSON.parse("{}");
-        var atLeastOneOn = false;
+        let data = JSON.parse("{}");
+        let atLeastOneOn = false;
         results.forEach(function (item) {
             data[item.name] = item;
 
@@ -127,7 +133,7 @@ function recordReadings(results, size, brewDate, callback) {
 
         // only record if at least one pump was on
         if (atLeastOneOn) {
-            var params = {
+            let params = {
                 TableName: "brew_recordings",
                 Item: {
                     type: "output_recording",
@@ -137,13 +143,13 @@ function recordReadings(results, size, brewDate, callback) {
                 }
             };
 
-            var paramsStr = JSON.stringify(params);
+            let paramsStr = JSON.stringify(params);
             console.log("Params to persist: " + paramsStr);
             dynamo.putItem(params, function (err, resp) {
-                var respMsg;
+                let respMsg;
                 if (err) {
                     respMsg = err.message;
-                    sendNotification(err.message, callback);
+                    sendNotification("Output Poller :: " + err.message, callback);
                 } else {
                     respMsg = "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
                 }

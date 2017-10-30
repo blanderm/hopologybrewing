@@ -34,6 +34,13 @@
             </div>
             <div class="row">
                 <div class="col-sm-4" ng-controller="tempPidController">
+                     <div ng-show="!probes" class="panel panel-default">
+                        <div class="panel-body text-center" ng-controller="outputController">
+                            <div class="well">
+                               <h4 class="text-danger">Check your BCS connection.  Temps should display here</h4>
+                            </div>
+                        </div>
+                    </div>
                      <div ng-repeat="probe in probes" class="text-center">
                          <div class="panel panel-default">
                              <div class="panel-body" ng-controller="outputController">
@@ -102,7 +109,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-3">
-                                <div class="btn-group btn-group pull-right" role="group">
+                                <div class="btn-group btn-group pull-right" role="group" ng-show="selectedBrew">
                                     <div class="btn-group btn-group" role="group">
                                         <button id="cloudWatchButton" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
                                             Polling <span class="caret"></span>
@@ -127,7 +134,7 @@
                         </div>
                         <div class="row">
                             <div class="col-sm-8" ng-controller="currentStateController">
-                                <table class="table" ng-show="activeProcesses.length != 0">
+                                <table class="table" ng-show="activeProcesses && activeProcesses.length != 0">
                                     <tr>
                                         <th>Process</th>
                                         <th>Active State</th>
@@ -165,14 +172,14 @@
             </div>
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="hr">.</div>
+                    <div ng-show="selectedBrew" class="hr">.</div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
                     <div class="clearfix pull-right">
                         <span style="display: inline-block;">
-                            <h4><a data-toggle="modal" class="glyphicon glyphicon-plus" data-target="#createBrewDialog" title="Create Brew"></a></h4>
+                            <h4><a ng-show="selectedBrew" data-toggle="modal" class="glyphicon glyphicon-plus" data-target="#createBrewDialog" title="Create Brew"></a></h4>
                             <div id="createBrewDialog" class="modal fade" role="dialog">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -216,11 +223,11 @@
                             </div>
                         </span>
                     </div>
-                    <div class="pull-right">&nbsp;&nbsp;</div>
-                    <div class="pull-right">
+                    <div ng-show="selectedBrew" class="pull-right">&nbsp;&nbsp;</div>
+                    <div ng-show="selectedBrew" class="pull-right">
                         <h4>Brew: <select ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
                     </div>
-                    <div class="pull-left">
+                    <div ng-show="selectedBrew" class="pull-left">
                         <h4>Date Range: <input date-range-picker class="date-picker small-pad" ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, datePicker.startDate, datePicker.endDate)" min="dateMin" max="dateMax" type="text" ng-model="datePicker" options="datePickerOptions" /></h4>
                     </div>
                 </div>
@@ -228,12 +235,12 @@
 
             <div class="row">
                 <div class="col-sm-12 clearfix">
-                    <div id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                    <div ng-show="selectedBrew" id="temp-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
-                    <div id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                    <div ng-show="selectedBrew" id="output-history" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                 </div>
             </div>
         </div>

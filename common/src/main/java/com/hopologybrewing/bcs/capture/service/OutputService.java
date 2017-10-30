@@ -23,14 +23,6 @@ public class OutputService extends BcsService {
     public OutputService() {
     }
 
-    public OutputService(String user, String pwd) {
-        super(user, pwd);
-    }
-
-    public OutputService(String user, String pwd, String ip) {
-        super(user, pwd, ip);
-    }
-
     public Output getOutput(String outputId) {
         return (Output) super.getData(BcsService.Type.OUTPUT, outputId);
     }
