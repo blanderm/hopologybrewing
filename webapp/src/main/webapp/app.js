@@ -102,53 +102,56 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             $scope.brews = response.data.brews;
 
             $scope.selectedBrew = response.data.brews[response.data.mostRecent];
-            $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
+            if ($scope.selectedBrew) {
+                $scope.brewDate = moment($scope.selectedBrew.brewDate).format("MMM Do YYYY");
 
-            if ($scope.selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
-            if ($scope.selectedBrew.yeastPitch) $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
-            if ($scope.selectedBrew.crashStart) $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
+                if ($scope.selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment($scope.selectedBrew.brewCompleteDate).format("M/D h:mm a");
+                if ($scope.selectedBrew.yeastPitch) $scope.yeastPitch = moment($scope.selectedBrew.yeastPitch).format("M/D h:mm a");
+                if ($scope.selectedBrew.crashStart) $scope.crashStart = moment($scope.selectedBrew.crashStart).format("M/D h:mm a");
 
-            let startDate = null;
-            let endDate = null;
-            if ($scope.selectedBrew && $scope.selectedBrew.brewCompleteDate > 0) {
-                // if brew is complete, render all data
-                endDate = moment($scope.selectedBrew.brewCompleteDate);
-                startDate = moment($scope.selectedBrew.brewDate);
-            } else {
-                endDate = moment();
-                startDate = moment(endDate).subtract(2, 'days');
-            }
 
-            // add a separate date picker for output and pumps
-            // pumps default to last 7 days
-            // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
-            $scope.datePickerOptions = {
-                locale: {
-                    applyLabel: "Apply",
-                    fromLabel: "From",
-                    format: "MM-DD-YYYY",
-                    toLabel: "To",
-                    cancelLabel: 'Cancel',
-                    customRangeLabel: 'Custom range'
-                },
-                ranges: {
-                    'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
-                    'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
-                    'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
-                    'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
-                    'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
-                },
-                eventHandlers: {
-                    'apply.daterangepicker': function(ev, picker) {
-                        $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
-                    }
+                let startDate = null;
+                let endDate = null;
+                if ($scope.selectedBrew && $scope.selectedBrew.brewCompleteDate > 0) {
+                    // if brew is complete, render all data
+                    endDate = moment($scope.selectedBrew.brewCompleteDate);
+                    startDate = moment($scope.selectedBrew.brewDate);
+                } else {
+                    endDate = moment();
+                    startDate = moment(endDate).subtract(2, 'days');
                 }
-            };
 
-            $scope.dateMin =  $scope.selectedBrew.brewDate;
-            $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
-            $scope.datePicker = {startDate: startDate, endDate: endDate};
-            $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
+                // add a separate date picker for output and pumps
+                // pumps default to last 7 days
+                // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
+                $scope.datePickerOptions = {
+                    locale: {
+                        applyLabel: "Apply",
+                        fromLabel: "From",
+                        format: "MM-DD-YYYY",
+                        toLabel: "To",
+                        cancelLabel: 'Cancel',
+                        customRangeLabel: 'Custom range'
+                    },
+                    ranges: {
+                        'First 7 Days': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.brewDate).add(6, 'days')],
+                        'Pre-Crash': [moment($scope.selectedBrew.brewDate), moment($scope.selectedBrew.crashStart)],
+                        'Last 3 Days': [moment(endDate).subtract(2, 'days'), moment(endDate)],
+                        'Last 7 Days': [moment(endDate).subtract(6, 'days'), moment(endDate)],
+                        'Entire Brew': [moment($scope.selectedBrew.brewDate), moment(endDate)]
+                    },
+                    eventHandlers: {
+                        'apply.daterangepicker': function(ev, picker) {
+                            $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
+                        }
+                    }
+                };
+
+                $scope.dateMin =  $scope.selectedBrew.brewDate;
+                $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
+                $scope.datePicker = {startDate: startDate, endDate: endDate};
+                $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
+            }
         });
 
         $scope.createBrew = function (brew_name, brew_description, month, day, year) {
