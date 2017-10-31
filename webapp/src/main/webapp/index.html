@@ -146,24 +146,24 @@
                                         <td>{{ process.states[process.current_state.state] }}<span ng-show="process.paused" class="glyphicon glyphicon-pause" style="color: red"></span></td>
                                         <td>{{ convertTimerValue(process.statesObj[process.current_state.state].timers[0].value) }} ({{ process.statesObj[process.current_state.state].timers[0].count_up ? 'up' : 'dn'}})</td>
                                         <td ng-show="!process.nextState.startsWith('State ')">{{ process.nextState ? process.nextState : "(no exit condition set)"}}</td>
-                                    </tr>
-                                    <div id="{{'processStates' + $index}}" class="modal fade" role="dialog">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                    <h4 class="modal-title">{{ process.name + ' States' }}</h4>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <ul>
-                                                        <li ng-show="process.states != null && !state.startsWith('State ')" ng-repeat="state in process.states" data-ng-class="[process.current_state.state == $index ? 'state-list-on' : '']">
-                                                            {{ state }}
-                                                        </li>
-                                                    </ul>
+                                        <td id="{{'processStates' + $index}}" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 class="modal-title">{{ process.name + ' States' }}</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <ul>
+                                                            <li ng-show="process.states != null && !state.startsWith('State ')" ng-repeat="state in process.states" data-ng-class="[process.current_state.state == $index ? 'state-list-on' : '']">
+                                                                {{ state }}
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </td>
+                                    </tr>
                                 </table>
                             </div>
                         </div>
