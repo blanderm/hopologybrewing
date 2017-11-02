@@ -34,7 +34,7 @@
             </div>
             <div class="row">
                 <div class="col-sm-4" ng-controller="tempPidController">
-                     <div ng-show="!probes || probes.length == 0" class="panel panel-default">
+                     <div ng-show="noProbes" class="panel panel-default">
                         <div class="panel-body text-center">
                             <div class="well">
                                <h4 class="text-danger">Check your BCS connection.  Temps should display here...</h4>
@@ -57,7 +57,7 @@
                     <div class="container">
                         <div class="row">
                             <div class="col-sm-5">
-                                <div ng-show="!selectedBrew">
+                                <div ng-show="noSelectedBrew">
                                     <h1 class="text-dark">Get Started</h1>
                                     <h3><a data-toggle="modal" data-target="#createBrewDialog"><span class="glyphicon glyphicon-plus text-success"></span> Create a brew</a></h3>
                                 </div>
@@ -78,12 +78,24 @@
                                                         <div>
                                                             <form role="form">
                                                                 <div class="form-group">
-                                                                    <label for="brew_name">Name: </label>
-                                                                    <input type="text" class="form-control" ng-model="selectedBrew.name" placeholder="Name of the brew">
+                                                                    <label for="edit_brew_name">Name: </label>
+                                                                    <input id="edit_brew_name" type="text" class="form-control" ng-model="selectedBrew.name" placeholder="Name of the brew">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="brew_description">Description: </label>
-                                                                    <input type="text" class="form-control" ng-model="selectedBrew.description" placeholder="Description of the brew">
+                                                                    <label for="edit_brew_description">Description: </label>
+                                                                    <textarea id="edit_brew_description" class="form-control" ng-model="selectedBrew.description" ng-attr-placeholder="Description of the brew"></textarea>
+                                                                </div>
+                                                                <div ng-show="selectedBrew.yeastPitch" class="form-group">
+                                                                    <label for="edit_brew_yeast">Pitched Yeast On: </label>
+                                                                    <input disabled id="edit_brew_yeast" type="text" dateformat class="form-control" ng-model="selectedBrew.yeastPitch" placeholder="Date yeast was pitched for this brew">
+                                                                </div>
+                                                                <div ng-show="selectedBrew.crashStart" class="form-group">
+                                                                    <label for="edit_brew_crash">Crash Started On: </label>
+                                                                    <input disabled id="edit_brew_crash" type="text" dateformat class="form-control" ng-model="selectedBrew.crashStart" placeholder="Date craash started for this brew">
+                                                                </div>
+                                                                <div ng-show="selectedBrew.brewCompleteDate" class="form-group">
+                                                                    <label for="edit_brew_complete">Brew Completed On: </label>
+                                                                    <input disabled id="edit_brew_complete" type="text" dateformat class="form-control" ng-model="selectedBrew.brewCompleteDate" placeholder="Date fermentation and dry hop completed for this brew">
                                                                 </div>
                                                             </form>
                                                         </div>
@@ -116,8 +128,8 @@
                                         </button>
                                         <ul class="dropdown-menu" role="menu">
                                             <li><a href="#" ng-click="triggerCloudWatch('SINGLE')"><span class="glyphicon glyphicon-refresh"></span> Enable Polling</a></li>
-                                            <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable Output Polling</a></li>
-                                            <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
+                                            <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')"><span class="glyphicon glyphicon-remove"></span> Disable Output Polling</a></li>
+                                            <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
                                         </ul>
                                     </div>
                                     <div class="btn-group btn-group" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">

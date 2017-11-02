@@ -59,7 +59,8 @@ function processEvent(event, callback, brewDate) {
 }
 
 function updateBrewInfo(params, attrName, callback) {
-    let now = new Date().getTime();
+    let currentDate = new Date();
+    let now = currentDate.getTime();
     params.ExpressionAttributeNames = {
         "#an": attrName
     };
@@ -72,7 +73,7 @@ function updateBrewInfo(params, attrName, callback) {
     var paramsStr = JSON.stringify(params);
     console.log("Params to persist: " + paramsStr);
     dynamo.update(params, function (err, resp) {
-        var respMsg = err ? err.message : "Updated attribute " + attrName + " with value " + now;
+        var respMsg = err ? err.message : "Updated attribute " + attrName + " with value " + currentDate.toUTCString();
         console.log(respMsg);
         sendNotifiction(respMsg, callback, err);
     });

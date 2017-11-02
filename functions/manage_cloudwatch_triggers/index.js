@@ -17,38 +17,38 @@ exports.handler = (event, context, callback) => {
 
     if (CLICK_SINGLE == clickType) {
         console.log("Received event type " + clickType + ", enabling pollers");
-        updateRule("every-minute", true, callback, false);
-        updateRule("every-five-minutes", true, callback, true);
+        updateRule("every-minute", true, callback, false, clickType);
+        updateRule("every-five-minutes", true, callback, true, clickType);
     } else if (CLICK_DOUBLE == clickType) {
-        console.log("Received event type " + clickType + ", disabling pollers");
-        updateRule("every-minute", false, callback, false);
-        updateRule("every-five-minutes", false, callback, true);
-    } else if (CLICK_LONG == clickType) {
         console.log("Received event type " + clickType + ", disabling output poller");
-        updateRule("every-minute", false, callback, true);
+        updateRule("every-minute", false, callback, true, clickType);
+    } else if (CLICK_LONG == clickType) {
+        console.log("Received event type " + clickType + ", disabling pollers");
+        updateRule("every-minute", false, callback, false, clickType);
+        updateRule("every-five-minutes", false, callback, true, clickType);
     } else {
         console.log("Received event but ignoring.");
         sendNotification("Received event but ignoring.", callback);
     }
 };
 
-function updateRule(ruleName, enable, callback, notify) {
+function updateRule(ruleName, enable, callback, notify, clickType) {
     var params = {
         Name: ruleName
     };
 
     if (enable) {
         cloudwatchevents.enableRule(params, function (err, data) {
-            handleRuleResult(err, "enabled", ruleName, callback, notify);
+            handleRuleResult(err, "enabled", ruleName, callback, notify, clickType);
         });
     } else {
         cloudwatchevents.disableRule(params, function (err, data) {
-            handleRuleResult(err, "disabled", ruleName, callback, notify);
+            handleRuleResult(err, "disabled", ruleName, callback, notify, clickType);
         });
     }
 }
 
-function handleRuleResult(err, type, ruleName, callback, notify) {
+function handleRuleResult(err, type, ruleName, callback, notify, clickType) {
     if (err) {
         console.log(err.message, err.stack);
         sendNotification(err.message, callback, err);
@@ -56,7 +56,7 @@ function handleRuleResult(err, type, ruleName, callback, notify) {
         console.log("Successfully " + type + " rule: " + ruleName);
     }
 
-    if(notify) sendNotification("Successfully " + type + " rules", callback);
+    if(notify) sendNotification("Successfully " + type + " rules for type " + clickType, callback);
 }
 
 function sendNotification(msg, callback, err) {

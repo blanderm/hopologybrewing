@@ -82,6 +82,7 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
     .controller('tempPidController', function ($scope, $http) {
         $http.get('/temp').then(function (response) {
             // find active process and get current state
+            $scope.noProbes = (response.data.length == 0);
             $scope.probes = [];
 
             for (let i = 0; i < response.data.length; i++) {
@@ -151,6 +152,8 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                 $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
                 $scope.datePicker = {startDate: startDate, endDate: endDate};
                 $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
+            } else {
+                $scope.noSelectedBrew = true;
             }
         });
 
@@ -260,7 +263,14 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             };
 
             $http.post(url, data, config).then(function (response) {
-                $('#brewInfoUpdateButton').button('reset');
+                url = CLOUDWATCH_API_URL + '/trigger';
+
+                $http.post(url, data, config).then(function (response) {
+                    $('#brewInfoUpdateButton').button('reset');
+                }, function (error) {
+                    console.log(error);
+                    $('#brewInfoUpdateButton').button('reset');
+                });
             }, function (error) {
                 console.log(error);
                 $('#brewInfoUpdateButton').button('reset');
@@ -408,3 +418,20 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             });
         };
     });
+
+app.directive('dateformat', function() {
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        scope: true,
+        link: function(scope, el, attrs, ngModel) {
+
+            ngModel.$formatters.push(function(value) { //show the user the date
+                return new Date(value).toUTCString();
+            });
+            ngModel.$parsers.push(function(value){
+                return new Date(value).getTime(); //convert back to milliseconds
+            });
+        }
+    };
+});
