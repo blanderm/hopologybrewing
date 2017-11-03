@@ -15,22 +15,29 @@ exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));
 
     var brewDate = 0;
-    dynamo.scan({TableName: BREW_INFO_TABLE_NAME}, function (err, resp) {
-        var response = err ? err.message : JSON.parse(JSON.stringify(resp));
-        console.log("Raw response from scan: " + JSON.stringify(response));
+    let selectedBrewDate = (event.brewDate ? event.brewDate : JSON.parse(event.body).brewDate);
 
-        var now = new Date().getTime();
-        var item;
-        for (var i = 0; i < response.Items.length; i++) {
-            item = response.Items[i];
-            if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
-                brewDate = item.brew_date;
-                console.log("Brew date: " + item.brew_date);
-                processEvent(event, callback, brewDate);
-                break;
+    if (selectedBrewDate) {
+        processEvent(event, callback, selectedBrewDate);
+    } else {
+        // find an active brew, assumes there's only one
+        dynamo.scan({TableName: BREW_INFO_TABLE_NAME}, function (err, resp) {
+            var response = err ? err.message : JSON.parse(JSON.stringify(resp));
+            console.log("Raw response from scan: " + JSON.stringify(response));
+
+            var now = new Date().getTime();
+            var item;
+            for (var i = 0; i < response.Items.length; i++) {
+                item = response.Items[i];
+                if ((item.brew_complete_date === undefined && now >= item.brew_date) || (now >= item.brew_date && now <= item.brew_complete_date)) {
+                    brewDate = item.brew_date;
+                    console.log("Brew date: " + item.brew_date);
+                    processEvent(event, callback, brewDate);
+                    break;
+                }
             }
-        }
-    });
+        });
+    }
 };
 
 function processEvent(event, callback, brewDate) {

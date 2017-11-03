@@ -4,19 +4,18 @@ console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
 const doc = require('dynamodb-doc');
 const dynamo = new doc.DynamoDB();
+const BREW_INFO_TABLE_NAME = "brew_info";
 
 exports.handler = (event, context, callback) => {
     let data = JSON.parse(event.body);
-    let brewDate = (data.month !== undefined && data.day !== undefined && data.year !== undefined) ? new Date(data.year, data.month, data.day) : new Date();
-    brewDate.setUTCHours(4);
-    brewDate.setUTCMinutes(0);
-    brewDate.setUTCSeconds(0);
-    brewDate.setUTCMilliseconds(0);
+    let brewDateMs = (data.brewDate ? data.brewDate : (data.month !== undefined && data.day !== undefined && data.year !== undefined) ? new Date(data.year, data.month - 1, data.day).getTime() : new Date().getTime());
+
+    console.log(brewDateMs);
 
     let params = {
-        TableName: "brew_info",
+        TableName: BREW_INFO_TABLE_NAME,
         Item: {
-            brew_date: brewDate.getTime(),
+            brew_date: brewDateMs,
             name: data.name,
             description: data.description,
             last_updated: new Date().getTime()
