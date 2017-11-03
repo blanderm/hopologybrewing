@@ -48,15 +48,19 @@ function updateRule(ruleName, enable, callback, notify, clickType) {
     }
 }
 
-function handleRuleResult(err, type, ruleName, callback, notify, clickType) {
+function handleRuleResult(err, change, ruleName, callback, notify, clickType) {
+    let type = (CLICK_DOUBLE == clickType) ? " output poller." : " all polling.";
+
     if (err) {
         console.log(err.message, err.stack);
         sendNotification(err.message, callback, err);
     } else {
-        console.log("Successfully " + type + " rule: " + ruleName);
+        console.log("Successfully " + change + " rule: " + ruleName);
     }
 
-    if(notify) sendNotification("Successfully " + type + " rules for type " + clickType, callback);
+    if(notify) {
+        sendNotification("Successfully " + change + type, callback);
+    }
 }
 
 function sendNotification(msg, callback, err) {
