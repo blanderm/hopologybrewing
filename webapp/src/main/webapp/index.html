@@ -46,7 +46,7 @@
                          <div class="panel panel-default">
                              <div class="panel-body" ng-controller="outputController">
                                  <div class="well">
-                                     <h2>{{probe.reading}} <small>{{probe.setpoint}} SP</small></h2>
+                                     <h2 class="text-success">{{probe.reading}} <small class="text-muted">{{probe.setpoint}} SP</small></h2>
                                      <small class="pull-right">{{probe.name}}</small>
                                  </div>
                                  <button id="{{'output' + $index}}" type="button" ng-show="outputs.length >= $index" data-ng-class="[outputs[$index].on ? 'btn btn-lg btn-success' : 'btn btn-lg btn-primary']" ng-bind="outputs[$index].name"/>
@@ -64,8 +64,16 @@
                                 </div>
                                 <div class="panel panel-default" ng-show="selectedBrew">
                                     <div class="panel-heading">
-                                        <h4 class="pull-left">{{selectedBrew.name}} <small>brewed on {{brewDate}}</small></h4>
-                                        <h4 class="pull-right"><a data-toggle="modal" class="glyphicon glyphicon-edit" data-target="#editBrewDialog" title="Edit Brew"></a></h4>
+                                        <h4 class="pull-left"><a data-toggle="modal" class="glyphicon glyphicon-edit" data-target="#editBrewDialog" title="Edit Brew"></a>&nbsp;{{selectedBrew.name}} <small>brewed on {{brewDate}}</small></h4>
+                                        <div class="btn-group btn-group pull-right" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">
+                                            <button id="brewInfoUpdateButton" type="button" class="btn btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                                Batch Dates <span class="caret"></span></button>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#" ng-click="updateBrew('SINGLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-play"></span> Set Yeast Pitch</a></li>
+                                                <li><a href="#" ng-click="updateBrew('DOUBLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-flash"></span> Set Crash Start</a></li>
+                                                <li><a href="#" ng-click="updateBrew('LONG', selectedBrew.brewDate)"><span class="glyphicon glyphicon-check"></span> Set Brew Complete</a></li>
+                                            </ul>
+                                        </div>
                                         <div class="clearfix"></div>
                                         <div id="editBrewDialog" class="modal fade" role="dialog">
                                             <div class="modal-dialog">
@@ -110,7 +118,8 @@
                                         </div>
                                     </div>
                                     <div class="panel-body">
-                                        <p>{{selectedBrew.description}}</p>
+
+                                        <p class="clearfix pull-left">{{selectedBrew.description}}</p>
                                     </div>
 
                                     <!-- Table -->
@@ -123,8 +132,8 @@
                             </div>
                             <div class="col-sm-3">
                                 <div class="panel panel-default" ng-show="selectedBrew">
-                                    <!--<div class="panel-heading">-->
-                                    <div class="panel-body">
+                                    <div class="panel-heading">
+                                        <h4 class="pull-left">Pollers</h4>
                                         <div class="btn-group btn-group pull-right" role="group">
                                             <button id="cloudWatchButton" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
                                                 Update <span class="caret"></span>
@@ -135,19 +144,13 @@
                                                 <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
                                             </ul>
                                         </div>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                    <div class="panel-body">
                                         <p ng-repeat="rule in rules" class="text-left">
-                                            <span data-ng-class="[rule.State == 'ENABLED' ? 'glyphicon glyphicon-ok text-success' : 'glyphicon glyphicon-remove text-danger']"></span> {{ (rule.Name == 'every-minute' ? "Output Poller" : "Temperature Poller") }}
+                                            <span data-ng-class="[rule.State == 'ENABLED' ? 'glyphicon glyphicon-ok text-success' : 'glyphicon glyphicon-remove text-danger']"></span>{{(rule.Name == 'every-minute' ? " Output Poller"+(rule.State == 'ENABLED' ? " Enabled" : " Disabled") : " Temperature Poller"+(rule.State == 'ENABLED' ? " Enabled" : " Disabled"))}}
                                         </p>
                                     </div>
-                                </div>
-                                <div class="btn-group btn-group pull-right" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">
-                                    <button id="brewInfoUpdateButton" type="button" class="btn btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
-                                        Batch Dates <span class="caret"></span></button>
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a href="#" ng-click="updateBrew('SINGLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-play"></span> Set Yeast Pitch</a></li>
-                                        <li><a href="#" ng-click="updateBrew('DOUBLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-flash"></span> Set Crash Start</a></li>
-                                        <li><a href="#" ng-click="updateBrew('LONG', selectedBrew.brewDate)"><span class="glyphicon glyphicon-check"></span> Set Brew Complete</a></li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
