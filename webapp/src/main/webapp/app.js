@@ -176,7 +176,6 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
         $http.get(CLOUDWATCH_API_URL + '/list').
         then(function (response) {
             $scope.rules = response.data;
-            console.log($scope.rules);
         });
 
         $scope.createBrew = function (brewName, brewDescription, createBrewDate) {
@@ -359,7 +358,7 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
 
         // update to have different ranges for temp and outpus
         $scope.renderCharts = function(selectedBrew, brewDate, lowerRange, upperRange) {
-            $scope.brewDate = (selectedBrew.brewDate) ? moment(selectedBrew.brewDate).format("MMM Do YYYY") : undefined;
+            $scope.brewDate = (selectedBrew.brewDate) ? moment(selectedBrew.brewDate).format("MM/DD/YYYY") : undefined;
             $scope.brewCompleteDate = (selectedBrew.brewCompleteDate) ? moment(selectedBrew.brewCompleteDate).format("M/D h:mm a") : undefined;
             $scope.yeastPitch = (selectedBrew.yeastPitch) ? moment(selectedBrew.yeastPitch).format("M/D h:mm a") : undefined;
             $scope.crashStart = (selectedBrew.crashStart) ? moment(selectedBrew.crashStart).format("M/D h:mm a") : undefined;

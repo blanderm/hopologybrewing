@@ -123,11 +123,11 @@
                                     </div>
 
                                     <!-- Table -->
-                                    <table class="table" ng-show="yeastPitch || crashStart || brewCompleteDate">
-                                        <tr ng-show="yeastPitch"><td><span class="glyphicon glyphicon-play"></span></td><td>Pitched on {{yeastPitch}}</td><td><a href="#" ng-click="updateBrew('SINGLE', selectedBrew.brewDate)" title="Set Yeast Pitch to NOW"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
-                                        <tr ng-show="crashStart"><td><span class="glyphicon glyphicon-flash"></span></td><td>Crashed on {{crashStart}}</td><td><a href="#" ng-click="updateBrew('DOUBLE', selectedBrew.brewDate)" title="Set Crash Start to NOW"><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
-                                        <tr ng-show="brewCompleteDate"><td><span class="glyphicon glyphicon-check"></span></td><td>Completed on {{brewCompleteDate}}</td><td><a href="#" ng-click="updateBrew('LONG', selectedBrew.brewDate)"title="Set Brew Complete Date to NOW" ><span class="glyphicon glyphicon-edit pull-right"></span></a></td></tr>
-                                    </table>
+                                    <ul class="list-group" ng-show="yeastPitch || crashStart || brewCompleteDate">
+                                        <li class="list-group-item" ng-show="yeastPitch"><span class="glyphicon glyphicon-play"></span>&nbsp;Pitched on {{yeastPitch}}</li>
+                                        <li class="list-group-item" ng-show="crashStart"><span class="glyphicon glyphicon-flash"></span>&nbsp;Crashed on {{crashStart}}</li>
+                                        <li class="list-group-item" ng-show="brewCompleteDate"><span class="glyphicon glyphicon-check"></span>&nbsp;Completed on {{brewCompleteDate}}</li>
+                                    </ul>
                                 </div>
                             </div>
                             <div class="col-sm-3">
