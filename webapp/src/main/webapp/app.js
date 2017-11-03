@@ -1,5 +1,5 @@
-const BREW_INFO_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
-const CLOUDWATCH_API_URL = "https://XXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
+const BREW_INFO_API_URL = "https://38i2h2bygi.execute-api.us-west-2.amazonaws.com/api";
+const CLOUDWATCH_API_URL = "https://ywh5rko6xh.execute-api.us-west-2.amazonaws.com/api";
 
 app = angular.module('brewing-bcs', ['daterangepicker'])
     .controller('outputController', function ($scope, $http) {

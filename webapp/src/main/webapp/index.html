@@ -122,26 +122,32 @@
                                 </div>
                             </div>
                             <div class="col-sm-3">
-                                <div class="btn-group btn-group pull-right" role="group" ng-show="selectedBrew">
-                                    <div class="btn-group btn-group" role="group">
-                                        <button id="cloudWatchButton" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
-                                            Polling <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li><a href="#" ng-click="triggerCloudWatch('SINGLE')"><span class="glyphicon glyphicon-refresh"></span> Enable Polling</a></li>
-                                            <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')"><span class="glyphicon glyphicon-remove"></span> Disable Output Polling</a></li>
-                                            <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
-                                        </ul>
+                                <div class="panel panel-default" ng-show="selectedBrew">
+                                    <!--<div class="panel-heading">-->
+                                    <div class="panel-body">
+                                        <div class="btn-group btn-group pull-right" role="group">
+                                            <button id="cloudWatchButton" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                                Update <span class="caret"></span>
+                                            </button>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#" ng-click="triggerCloudWatch('SINGLE')"><span class="glyphicon glyphicon-refresh"></span> Enable Polling</a></li>
+                                                <li><a href="#" ng-click="triggerCloudWatch('DOUBLE')"><span class="glyphicon glyphicon-remove"></span> Disable Output Polling</a></li>
+                                                <li><a href="#" ng-click="triggerCloudWatch('LONG')"><span class="glyphicon glyphicon-remove"></span> Disable All Polling</a></li>
+                                            </ul>
+                                        </div>
+                                        <p ng-repeat="rule in rules" class="text-left">
+                                            <span data-ng-class="[rule.State == 'ENABLED' ? 'glyphicon glyphicon-ok text-success' : 'glyphicon glyphicon-remove text-danger']"></span> {{ (rule.Name == 'every-minute' ? "Output Poller" : "Temperature Poller") }}
+                                        </p>
                                     </div>
-                                    <div class="btn-group btn-group" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">
-                                        <button id="brewInfoUpdateButton" type="button" class="btn btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
-                                            Batch Dates <span class="caret"></span></button>
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li><a href="#" ng-click="updateBrew('SINGLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-play"></span> Set Yeast Pitch</a></li>
-                                            <li><a href="#" ng-click="updateBrew('DOUBLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-flash"></span> Set Crash Start</a></li>
-                                            <li><a href="#" ng-click="updateBrew('LONG', selectedBrew.brewDate)"><span class="glyphicon glyphicon-check"></span> Set Brew Complete</a></li>
-                                        </ul>
-                                    </div>
+                                </div>
+                                <div class="btn-group btn-group pull-right" role="group" ng-show="!yeastPitch || !crashStart || !brewCompleteDate">
+                                    <button id="brewInfoUpdateButton" type="button" class="btn btn btn-primary dropdown-toggle" data-toggle="dropdown" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Submitting">
+                                        Batch Dates <span class="caret"></span></button>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="#" ng-click="updateBrew('SINGLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-play"></span> Set Yeast Pitch</a></li>
+                                        <li><a href="#" ng-click="updateBrew('DOUBLE', selectedBrew.brewDate)"><span class="glyphicon glyphicon-flash"></span> Set Crash Start</a></li>
+                                        <li><a href="#" ng-click="updateBrew('LONG', selectedBrew.brewDate)"><span class="glyphicon glyphicon-check"></span> Set Brew Complete</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
