@@ -125,7 +125,7 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                 // add a separate date picker for output and pumps
                 // pumps default to last 7 days
                 // output defaults to pre-crash and set max date to crashStart to avoid getting output data during crash
-                $scope.datePickerOptions = {
+                $scope.chartDatePickerOptions = {
                     locale: {
                         applyLabel: "Apply",
                         fromLabel: "From",
@@ -143,33 +143,55 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                     },
                     eventHandlers: {
                         'apply.daterangepicker': function(ev, picker) {
-                            $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, $scope.datePicker.startDate, $scope.datePicker.endDate)
+                            $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, $scope.chartDatePicker.startDate, $scope.chartDatePicker.endDate)
                         }
                     }
                 };
 
+                $('#createBrewDatePicker').daterangepicker({
+                    singleDatePicker: true,
+                    showDropdowns: true,
+                    locale: {
+                        format: 'MM/DD/YYYY'
+                    },
+                    autoApply: true,
+                    autoUpdateInput: true,
+                    showCustomRangeLabel: false,
+                    startDate: moment().format("MM/DD/YYYY")
+                }, function(start, end, label) {
+                    $scope.createBrewDate = start.format('YYYY-MM-DD');
+                    console.log("New date range selected: " + start.format('YYYY-MM-DD') + " to " + end.format('YYYY-MM-DD') + " (predefined range: " + label + ")");
+                    console.log($scope.createBrewDate);
+                });
+
                 $scope.dateMin =  $scope.selectedBrew.brewDate;
                 $scope.dateMax =  ($scope.selectedBrew.brewCompleteDate > 0 ? $scope.selectedBrew.brewCompleteDate : null);
-                $scope.datePicker = {startDate: startDate, endDate: endDate};
+                $scope.chartDatePicker = {startDate: startDate, endDate: endDate};
                 $scope.renderCharts($scope.selectedBrew, $scope.selectedBrew.brewDate, startDate, endDate);
             } else {
                 $scope.noSelectedBrew = true;
             }
         });
 
-        $scope.createBrew = function (brew_name, brew_description, month, day, year) {
-            if (!brew_name || !month || !day || !year) {
-                $scope.createBrewError = "You must provide a brew name, month, day and year.";
+        $http.get(CLOUDWATCH_API_URL + '/list').
+        then(function (response) {
+            $scope.rules = response.data;
+            console.log($scope.rules);
+        });
+
+        $scope.createBrew = function (brewName, brewDescription, createBrewDate) {
+            if (!brewName || !createBrewDate) {
+                $scope.createBrewError = "You must provide a brew name and date.";
             } else {
+                console.log(createBrewDate);
                 let url = BREW_INFO_API_URL + '/create';
                 $('#createBrewButton').button('loading');
                 let data = {
-                    "month": month - 1,
-                    "day": day,
-                    "year": year,
-                    "description": brew_description,
-                    "name": brew_name
+                    "name": brewName,
+                    "brewDate": (moment(createBrewDate).format("x") - 0)
                 };
+
+                if (brewDescription) data["description"] = brewDescription;
 
                 let config = {
                     headers: {
@@ -195,7 +217,6 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             if (!brew.name) {
                 $scope.editBrewError = "You must provide a brew name.";
             } else {
-                let brew_date = moment(brew.brewDate);
                 let url = BREW_INFO_API_URL + '/create';
                 $('#editBrewButton').button('loading');
                 let addlAttrs = [];
@@ -221,11 +242,9 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                 }
 
                 let data = {
-                    "month": brew_date.format("M") - 1,
-                    "day": brew_date.format("D"),
-                    "year": brew_date.format("YYYY"),
-                    "description": brew.description,
+                    "brewDate": (moment(brew.brewDate).format("x") - 0),
                     "name": brew.name,
+                    "description": brew.description,
                     "additionalAttributes" : addlAttrs
                 };
 
@@ -249,12 +268,14 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             }
         };
 
-        $scope.updateBrew = function (clickType) {
+        $scope.updateBrew = function (clickType, brewDate) {
             let url = BREW_INFO_API_URL + '/update';
             $('#brewInfoUpdateButton').button('loading');
             let data = {
-                "clickType": clickType
+                "clickType": clickType,
             };
+
+            if (brewDate) data["brewDate"] = (moment(brewDate).format("x") - 0);
 
             let config = {
                 headers: {
@@ -263,14 +284,18 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             };
 
             $http.post(url, data, config).then(function (response) {
-                url = CLOUDWATCH_API_URL + '/trigger';
+                if (confirm("Do you want to update polling?") == true) {
+                    url = CLOUDWATCH_API_URL + '/trigger';
 
-                $http.post(url, data, config).then(function (response) {
+                    $http.post(url, data, config).then(function (response) {
+                        $('#brewInfoUpdateButton').button('reset');
+                    }, function (error) {
+                        console.log(error);
+                        $('#brewInfoUpdateButton').button('reset');
+                    });
+                } else {
                     $('#brewInfoUpdateButton').button('reset');
-                }, function (error) {
-                    console.log(error);
-                    $('#brewInfoUpdateButton').button('reset');
-                });
+                }
             }, function (error) {
                 console.log(error);
                 $('#brewInfoUpdateButton').button('reset');
@@ -334,10 +359,10 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
 
         // update to have different ranges for temp and outpus
         $scope.renderCharts = function(selectedBrew, brewDate, lowerRange, upperRange) {
-            if (selectedBrew.brewDate) $scope.brewDate = moment(selectedBrew.brewDate).format("MMM Do YYYY");
-            if (selectedBrew.brewCompleteDate) $scope.brewCompleteDate = moment(selectedBrew.brewCompleteDate).format("M/D h:mm a");
-            if (selectedBrew.yeastPitch) $scope.yeastPitch = moment(selectedBrew.yeastPitch).format("M/D h:mm a");
-            if (selectedBrew.crashStart) $scope.crashStart = moment(selectedBrew.crashStart).format("M/D h:mm a");
+            $scope.brewDate = (selectedBrew.brewDate) ? moment(selectedBrew.brewDate).format("MMM Do YYYY") : undefined;
+            $scope.brewCompleteDate = (selectedBrew.brewCompleteDate) ? moment(selectedBrew.brewCompleteDate).format("M/D h:mm a") : undefined;
+            $scope.yeastPitch = (selectedBrew.yeastPitch) ? moment(selectedBrew.yeastPitch).format("M/D h:mm a") : undefined;
+            $scope.crashStart = (selectedBrew.crashStart) ? moment(selectedBrew.crashStart).format("M/D h:mm a") : undefined;
 
             var pathVar = '';
 
