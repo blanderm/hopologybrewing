@@ -4,7 +4,7 @@ console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
 var AWS = require('aws-sdk');
 var cloudwatchevents = new AWS.CloudWatchEvents();
-const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
+const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));

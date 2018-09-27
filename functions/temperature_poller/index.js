@@ -11,8 +11,8 @@ const AWS = require('aws-sdk');
 const encryptedHost = process.env['BCS_IP'];
 const encryptedUser = process.env['USER'];
 const encryptedPassword = process.env['PWD'];
-const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
-const SOCKET_TIMEOUT = 250;
+const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
+const SOCKET_TIMEOUT = 400;
 let decryptedHost;
 let decryptedUser;
 let decryptedPwd;
@@ -62,7 +62,7 @@ function getActiveBrew(event, context, callback) {
         let item;
         for (let i = 0; i < response.Items.length; i++) {
             item = response.Items[i];
-            if ((item.brew_complete_date === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.brew_complete_date)) {
+            if ((item.brew_completion_date === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.brew_completion_date)) {
                 brewDate = item.brew_date;
                 console.log("Brew date: " + item.brew_date + " Yeast Pitch: " + item.yeast_pitch);
                 break;
@@ -85,7 +85,7 @@ function processEvent(event, context, callback, brewDate) {
                 host: decryptedHost,
                 auth: decryptedUser + ':' + decryptedPwd,
                 path: '/api/temp/' + i,
-                port: '80',
+                port: '8888',
                 method: 'GET',
                 timeout: SOCKET_TIMEOUT
             },

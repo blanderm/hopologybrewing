@@ -9,7 +9,7 @@ const CLICK_SINGLE = "SINGLE";
 const CLICK_DOUBLE = "DOUBLE";
 const CLICK_LONG = "LONG";
 const BREW_INFO_TABLE_NAME = "brew_info";
-const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
+const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 
 exports.handler = (event, context, callback) => {
     console.log("Request received: " + JSON.stringify(event));

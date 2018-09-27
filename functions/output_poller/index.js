@@ -11,8 +11,8 @@ const AWS = require('aws-sdk');
 const encryptedHost = process.env['BCS_IP'];
 const encryptedUser = process.env['USER'];
 const encryptedPassword = process.env['PWD'];
-const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
-const SOCKET_TIMEOUT = 250;
+const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
+const SOCKET_TIMEOUT = 400;
 let decryptedHost;
 let decryptedUser;
 let decryptedPwd;
@@ -85,7 +85,7 @@ function processEvent(event, context, callback, brewDate) {
                 host: decryptedHost,
                 auth: decryptedUser + ':' + decryptedPwd,
                 path: '/api/output/' + i,
-                port: '80',
+                port: '8888',
                 method: 'GET',
                 timeout: SOCKET_TIMEOUT
             },
@@ -96,13 +96,11 @@ function processEvent(event, context, callback, brewDate) {
                 let rawData = '';
                 response.on('data', function (chunk) {
                     rawData += chunk;
-                    console.log("data: " + rawData);
                 });
 
                 response.on('end', () => {
                     let parsedData = JSON.parse(rawData);
                     results.push(parsedData);
-                    console.log("Data received from controller: " + JSON.stringify(parsedData));
                     console.log("Results: " + JSON.stringify(results));
                     recordReadings(results, size, brewDate);
                 });

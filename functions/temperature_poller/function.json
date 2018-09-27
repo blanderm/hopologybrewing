@@ -1,5 +1,5 @@
 {
   "handler": "index.handler",
-  "memory": 128,
-  "timeout": 2
+  "memory": 256,
+  "timeout": 3
 }

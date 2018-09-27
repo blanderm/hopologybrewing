@@ -7,7 +7,7 @@ var cloudwatchevents = new AWS.CloudWatchEvents();
 const CLICK_SINGLE = "SINGLE";
 const CLICK_DOUBLE = "DOUBLE";
 const CLICK_LONG = "LONG";
-const IOT_SNS_TOPIC_ARN = process.env['IOT_BUTTON_ARN'];
+const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 
 
 exports.handler = (event, context, callback) => {
