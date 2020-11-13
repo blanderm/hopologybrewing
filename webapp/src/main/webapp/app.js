@@ -117,9 +117,12 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                     // if brew is complete, render all data
                     endDate = moment($scope.selectedBrew.brewCompleteDate);
                     startDate = moment($scope.selectedBrew.brewDate);
-                } else {
+                } else if (moment().subtract(2, 'days').isAfter($scope.selectedBrew.brewDate)) {
                     endDate = moment();
                     startDate = moment(endDate).subtract(2, 'days');
+                }   else {
+                    endDate = moment();
+                    startDate = moment($scope.selectedBrew.brewDate);
                 }
 
                 // add a separate date picker for output and pumps
