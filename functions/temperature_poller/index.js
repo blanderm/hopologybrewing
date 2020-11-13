@@ -10,9 +10,9 @@ const ssm = new AWS.SSM();
 
 const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 const SOCKET_TIMEOUT = 2000;
-let decryptedHost;
-let decryptedUser;
-let decryptedPwd;
+var decryptedHost;
+var decryptedUser;
+var decryptedPwd;
 
 
 exports.handler = function(event, context) {
