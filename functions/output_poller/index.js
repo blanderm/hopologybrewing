@@ -6,47 +6,48 @@ const http = require('http');
 const AWS = require('aws-sdk');
 AWS.config.logger = console;
 const dynamo = new AWS.DynamoDB();
+const ssm = new AWS.SSM();
 
-const encryptedHost = process.env['BCS_IP'];
-const encryptedUser = process.env['USER'];
-const encryptedPassword = process.env['PASSWD'];
 const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 const SOCKET_TIMEOUT = 2000;
-let decryptedHost = process.env['BCS_IP'];
-let decryptedUser = process.env['USER'];
-let decryptedPwd = process.env['PASSWD'];
+let decryptedHost;
+let decryptedUser;
+let decryptedPwd;
 
 
 exports.handler = function(event, context) {
     if (decryptedHost && decryptedUser && decryptedPwd) {
-        console.log("Decrypted, getting brew info");
+        console.log("Decrypted, getting brew info");   
         getActiveBrew(event, context);
     } else {
         // Decrypt code should run once and variables stored outside of the function
         // handler so that these are decrypted once per container
         console.log("Decrypting...");
-        const kms = new AWS.KMS();
-         kms.decrypt({CiphertextBlob: encryptedHost}, function(err, data) {
-            if (err) {
-                console.log('Decrypt error:', err);
-            }
-
-            decryptedHost = data.Plaintext.toString('ascii');
-            kms.decrypt({CiphertextBlob: encryptedUser}, function(err, data) {
-                if (err) {
-                    console.log('Decrypt error:', err);
-                }
-
-                decryptedUser = data.Plaintext.toString('ascii');
-                kms.decrypt({CiphertextBlob: encryptedPassword}, function(err, data) {
-                    if (err) {
-                        console.log('Decrypt error:', err);
-                    }
-                    decryptedPwd = data.Plaintext.toString('ascii');
-                    getActiveBrew(event, context);
-                });
-            });
-        });
+        var params = {
+          Name: 'bcs_ip', /* required */
+          WithDecryption: true
+        };
+        ssm.getParameter(params, function(err, data) {
+          if (err) console.log(err, err.stack);
+          else {
+            decryptedHost = data.Parameter.Value;
+            params.Name = 'bcs_user';
+            ssm.getParameter(params, function(err, data) {
+              if (err) console.log(err, err.stack); // an error occurred
+              else {
+                decryptedUser = data.Parameter.Value;
+                params.Name = 'bcs_passwd';
+                ssm.getParameter(params, function(err, data) {
+                    if (err) console.log(err, err.stack); // an error occurred
+                    else {
+                        decryptedPwd = data.Parameter.Value;
+                        getActiveBrew(event, context);
+                    } 
+                }); 
+              } 
+            });   
+          }   
+        }); 
     }
 };
 
@@ -128,7 +129,8 @@ function processEvent(event, context, brewDate) {
 function recordReadings(results, size, brewDate) {
     if (results.length === size) {
         let data = JSON.parse("{}");
-        results.forEach(function(item) {
+        let atLeastOneOn = false;
+        results.forEach(function (item) {
             data[item.name] = { 
                 M: { 
                     enabled: {BOOL: item.enabled}, 
@@ -136,31 +138,36 @@ function recordReadings(results, size, brewDate) {
                     on: {BOOL: item.on}
                 }
             }            
+
+            atLeastOneOn = atLeastOneOn || item.on;
         });
 
-        let params = {
-            TableName: 'brew_recordings',
-            Item: {
-                type: { S: 'output_recording' },
-                timestamp: { N: new Date().getTime().toString() },
-                brew_date: { N: brewDate },
-                data: { M: data }
-            }
-        };
+        // only record if at least one pump was on
+        if (atLeastOneOn) {        
+            let params = {
+                TableName: 'brew_recordings',
+                Item: {
+                    type: { S: 'output_recording' },
+                    timestamp: { N: new Date().getTime().toString() },
+                    brew_date: { N: brewDate },
+                    data: { M: data }
+                }
+            };
 
-        let paramsStr = JSON.stringify(params);
-        console.log("Params to persist: " + paramsStr);
-        dynamo.putItem(params, function (err, resp) {
-            let respMsg;
-            if (err) {
-                respMsg = err.message;
-                sendNotification("Output Poller :: " + err.message);
-            } else {
-                respMsg = "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
-            }
+            let paramsStr = JSON.stringify(params);
+            console.log("Params to persist: " + paramsStr);
+            dynamo.putItem(params, function (err, resp) {
+                let respMsg;
+                if (err) {
+                    respMsg = err.message;
+                    sendNotification("Output Poller :: " + err.message);
+                } else {
+                    respMsg = "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
+                }
 
-            console.log(respMsg);
-        });
+                console.log(respMsg);
+            });
+        }
     }
 }
 

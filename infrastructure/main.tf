@@ -55,6 +55,12 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
   depends_on = ["aws_iam_role.lambda_role"]
 }
 
+resource "aws_iam_role_policy_attachment" "ssm_policy_attach" {
+  role = "${data.aws_iam_role.lambda_role.role_name}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+  depends_on = ["aws_iam_role.lambda_role"]
+}
+
 resource "aws_iam_role_policy_attachment" "api_gateway_policy_attach" {
   role = "${data.aws_iam_role.lambda_role.role_name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator"
@@ -119,104 +125,6 @@ resource "aws_iam_policy_attachment" "api_invoke_policy_attach" {
   roles      = ["${aws_iam_role.lambda_role.name}"]
   policy_arn = "${aws_iam_policy.api_invoke_policy.arn}"
   depends_on = ["aws_iam_role.lambda_role", "aws_iam_policy.api_invoke_policy"]
-}
-
-resource "aws_kms_key" "brewery_key" {
-  description = "Key used for sensitive info related to the brewery controller"
-  policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Id": "brewery-key-policy",
-    "Statement": [
-      {
-        "Sid": "Enable IAM User Permissions",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action": "kms:*",
-        "Resource": "*"
-      },
-      {
-        "Sid": "Allow access for Key Administrators",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${basename(data.aws_caller_identity.current.arn)}"
-        },
-        "Action": [
-          "kms:Create*",
-          "kms:Describe*",
-          "kms:Enable*",
-          "kms:List*",
-          "kms:Put*",
-          "kms:Update*",
-          "kms:Revoke*",
-          "kms:Disable*",
-          "kms:Get*",
-          "kms:Delete*",
-          "kms:TagResource",
-          "kms:UntagResource",
-          "kms:ScheduleKeyDeletion",
-          "kms:CancelKeyDeletion"
-        ],
-        "Resource": "*"
-      },
-      {
-        "Sid": "Allow use of the key",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${data.aws_iam_role.lambda_role.role_name}",
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${basename(data.aws_caller_identity.current.arn)}"
-          ]
-        },
-        "Action": [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey"
-        ],
-        "Resource": "*"
-      },
-      {
-        "Sid": "Allow attachment of persistent resources",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${data.aws_iam_role.lambda_role.role_name}",
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${basename(data.aws_caller_identity.current.arn)}"
-          ]
-        },
-        "Action": [
-          "kms:CreateGrant",
-          "kms:ListGrants",
-          "kms:RevokeGrant"
-        ],
-        "Resource": "*",
-        "Condition": {
-          "Bool": {
-            "kms:GrantIsForAWSResource": "true"
-          }
-        }
-      }
-    ]
-  }
-  EOF
-
-  tags {
-    name = "Brewery Temperature Controller"
-    creator = "${data.aws_caller_identity.current.account_id}"
-    purpose = "Key used for sensitive info related to the brewery controller"
-  }
-
-  depends_on = ["aws_iam_role.lambda_role"]
-}
-
-resource "aws_kms_alias" "brewery_key" {
-  name          = "alias/brewery_key"
-  target_key_id = "${aws_kms_key.brewery_key.key_id}"
-  depends_on = ["aws_kms_key.brewery_key"]
 }
 
 // DynamoDB resources
@@ -287,9 +195,9 @@ output "region" {
   value = "${var.region}"
 }
 
-output "brewery_key_arn" {
-  value = "${aws_kms_key.brewery_key.arn}"
-}
+///////////////
+TODO - Add tf to programatically add SSM Parameters for BCS data!
+///////////////
 
 ////
 // Consolidated items that require functions to be deployed by apex prior to "apex infra apply" executing successfully

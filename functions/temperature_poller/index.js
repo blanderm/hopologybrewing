@@ -6,15 +6,13 @@ const http = require('http');
 const AWS = require('aws-sdk');
 AWS.config.logger = console;
 const dynamo = new AWS.DynamoDB();
+const ssm = new AWS.SSM();
 
-const encryptedHost = process.env['BCS_IP'];
-const encryptedUser = process.env['USER'];
-const encryptedPassword = process.env['PASSWD'];
 const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
 const SOCKET_TIMEOUT = 2000;
-let decryptedHost = process.env['BCS_IP'];
-let decryptedUser = process.env['USER'];
-let decryptedPwd = process.env['PASSWD'];
+let decryptedHost;
+let decryptedUser;
+let decryptedPwd;
 
 
 exports.handler = function(event, context) {
@@ -25,28 +23,31 @@ exports.handler = function(event, context) {
         // Decrypt code should run once and variables stored outside of the function
         // handler so that these are decrypted once per container
         console.log("Decrypting...");
-        const kms = new AWS.KMS();
-         kms.decrypt({CiphertextBlob: encryptedHost}, function(err, data) {
-            if (err) {
-                console.log('Decrypt error:', err);
-            }
-
-            decryptedHost = data.Plaintext.toString('ascii');
-            kms.decrypt({CiphertextBlob: encryptedUser}, function(err, data) {
-                if (err) {
-                    console.log('Decrypt error:', err);
-                }
-
-                decryptedUser = data.Plaintext.toString('ascii');
-                kms.decrypt({CiphertextBlob: encryptedPassword}, function(err, data) {
-                    if (err) {
-                        console.log('Decrypt error:', err);
-                    }
-                    decryptedPwd = data.Plaintext.toString('ascii');
-                    getActiveBrew(event, context);
-                });
-            });
-        });
+        var params = {
+          Name: 'bcs_ip', /* required */
+          WithDecryption: true
+        };
+        ssm.getParameter(params, function(err, data) {
+          if (err) console.log(err, err.stack);
+          else {
+            decryptedHost = data.Parameter.Value;
+            params.Name = 'bcs_user';
+            ssm.getParameter(params, function(err, data) {
+              if (err) console.log(err, err.stack); // an error occurred
+              else {
+                decryptedUser = data.Parameter.Value;
+                params.Name = 'bcs_passwd';
+                ssm.getParameter(params, function(err, data) {
+                    if (err) console.log(err, err.stack); // an error occurred
+                    else {
+                        decryptedPwd = data.Parameter.Value;
+                        getActiveBrew(event, context);
+                    } 
+                }); 
+              } 
+            });   
+          }   
+        });   
     }
 };
 
