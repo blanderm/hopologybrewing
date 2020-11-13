@@ -2,82 +2,89 @@
 
 console.log('Loading ' + process.env['LAMBDA_FUNCTION_NAME'] + ' function');
 
-const doc = require('dynamodb-doc');
-const dynamo = new doc.DynamoDB();
 const http = require('http');
-
 const AWS = require('aws-sdk');
+AWS.config.logger = console;
+const dynamo = new AWS.DynamoDB();
 
 const encryptedHost = process.env['BCS_IP'];
 const encryptedUser = process.env['USER'];
-const encryptedPassword = process.env['PWD'];
+const encryptedPassword = process.env['PASSWD'];
 const IOT_SNS_TOPIC_ARN = process.env['BCS_NOTIFICATION_ARN'];
-const SOCKET_TIMEOUT = 400;
-let decryptedHost;
-let decryptedUser;
-let decryptedPwd;
+const SOCKET_TIMEOUT = 2000;
+let decryptedHost = process.env['BCS_IP'];
+let decryptedUser = process.env['USER'];
+let decryptedPwd = process.env['PASSWD'];
 
 
-exports.handler = (event, context, callback) => {
+exports.handler = function(event, context) {
     if (decryptedHost && decryptedUser && decryptedPwd) {
-        getActiveBrew(event, context, callback);
+        console.log("Decrypted, getting brew info");
+        getActiveBrew(event, context);
     } else {
         // Decrypt code should run once and variables stored outside of the function
         // handler so that these are decrypted once per container
+        console.log("Decrypting...");
         const kms = new AWS.KMS();
-        kms.decrypt({CiphertextBlob: new Buffer(encryptedHost, 'base64')}, (err, data) => {
+         kms.decrypt({CiphertextBlob: encryptedHost}, function(err, data) {
             if (err) {
                 console.log('Decrypt error:', err);
-                return callback(err);
             }
 
             decryptedHost = data.Plaintext.toString('ascii');
-            kms.decrypt({CiphertextBlob: new Buffer(encryptedUser, 'base64')}, (err, data) => {
+            kms.decrypt({CiphertextBlob: encryptedUser}, function(err, data) {
                 if (err) {
                     console.log('Decrypt error:', err);
-                    return callback(err);
                 }
 
                 decryptedUser = data.Plaintext.toString('ascii');
-                kms.decrypt({CiphertextBlob: new Buffer(encryptedPassword, 'base64')}, (err, data) => {
+                kms.decrypt({CiphertextBlob: encryptedPassword}, function(err, data) {
                     if (err) {
                         console.log('Decrypt error:', err);
-                        return callback(err);
                     }
                     decryptedPwd = data.Plaintext.toString('ascii');
-                    getActiveBrew(event, context, callback);
+                    getActiveBrew(event, context);
                 });
             });
         });
     }
 };
 
-function getActiveBrew(event, context, callback) {
+function getActiveBrew(event, context) {
     let brewDate = 0;
-    dynamo.scan({TableName: "brew_info"}, function (err, resp) {
-        let response = err ? err.message : JSON.parse(JSON.stringify(resp));
-        console.log("Raw response from scan: " + JSON.stringify(response));
+    console.log("Getting brew info...");
 
-        let now = new Date().getTime();
-        let item;
-        for (let i = 0; i < response.Items.length; i++) {
-            item = response.Items[i];
-            if ((item.brew_completion_date === undefined && now >= item.yeast_pitch) || (now >= item.yeast_pitch && now <= item.brew_completion_date)) {
-                brewDate = item.brew_date;
-                console.log("Brew date: " + item.brew_date + " Yeast Pitch: " + item.yeast_pitch);
-                break;
-            }
-        }
+    let params = {
+        TableName: "brew_info"
+    }
 
-        if (brewDate) {
-            processEvent(event, context, callback, brewDate);
+    dynamo.scan(params, function(err, data) {
+        if (err) {
+            console.log(err, err.stack); // an error occurred
         } else {
-            sendNotification("Failed to find active brew.  You should disable the pollers to avoid polling charges or create an active brew.", callback);
+            console.log("Raw response from scan: " + JSON.stringify(data));
+            let response = JSON.parse(JSON.stringify(data));
+    
+            let now = new Date().getTime();
+            response.Items.forEach(function(item) {
+                if (!item.brew_completion_date && item.yeast_pitch && now >= item.yeast_pitch.N) {
+                    brewDate = item.brew_date.N;
+                    console.log("Brew date: " + item.brew_date.N + " Yeast Pitch: " + item.yeast_pitch.N);
+                    return true;
+                }
+            });
+    
+            if (brewDate) {
+                processEvent(event, context, brewDate);
+            } else {
+                console.log("Failed to find active brew.  You should disable the pollers to avoid polling charges or create an active brew.");
+                sendNotification("Failed to find active brew.  You should disable the pollers to avoid polling charges or create an active brew.");
+            }
         }
     });
 }
 
-function processEvent(event, context, callback, brewDate) {
+function processEvent(event, context, brewDate) {
     let results = [];
     let size = 2;
     for (let i = 0; i < size; i++) {
@@ -89,12 +96,12 @@ function processEvent(event, context, callback, brewDate) {
                 method: 'GET',
                 timeout: SOCKET_TIMEOUT
             },
-            function (response) {
+            (response) => {
                 console.log('STATUS: ' + response.statusCode);
                 console.log('HEADERS: ' + JSON.stringify(response.headers));
                 response.setEncoding('utf8');
                 let rawData = '';
-                response.on('data', function (chunk) {
+                response.on('data', (chunk) => {
                     rawData += chunk;
                     console.log("data: " + rawData);
                 });
@@ -108,32 +115,44 @@ function processEvent(event, context, callback, brewDate) {
                 });
             }).on("error", (err) => {
                 console.log("Error: " + err.message);
-                sendNotification("Temperature Poller :: Error: " + err.message, callback);
+                sendNotification("Temperature Poller :: Error: " + err.message);
             }).on('timeout', () => {
                 console.log("Request timed out obtaining BCS data.");
                 request.abort();
-                sendNotification("Temperature Poller :: Request timed out obtaining BCS data.", callback);
+                sendNotification("Temperature Poller :: Request timed out obtaining BCS data.");
             });
         request.end();
     }
-
-    callback(null, "Completed temp reading capture.");
 }
 
-function recordReadings(results, size, brewDate, callback) {
+function recordReadings(results, size, brewDate) {
     if (results.length === size) {
         let data = JSON.parse("{}");
         results.forEach(function(item) {
-            data[item.name] = item;
+            let coarr = [];
+            item.coefficients.forEach(function(coeff) {
+                coarr.push({ N: coeff.toString() });
+            });
+
+            data[item.name] = { 
+                M: { 
+                    coefficients: { L: coarr }, 
+                    enabled: {BOOL: item.enabled}, 
+                    name: {S: item.name.toString()}, 
+                    resistance: {N: item.resistance.toString()},
+                    setpoint: {N: item.setpoint.toString()},
+                    temp: {N: item.temp.toString()}
+                }
+            }            
         });
 
         let params = {
-            TableName: "brew_recordings",
+            TableName: 'brew_recordings',
             Item: {
-                type: "temperature_recording",
-                timestamp: new Date().getTime(),
-                brew_date: brewDate,
-                data: data
+                type: { S: 'temperature_recording' },
+                timestamp: { N: new Date().getTime().toString() },
+                brew_date: { N: brewDate },
+                data: { M: data }
             }
         };
 
@@ -143,19 +162,17 @@ function recordReadings(results, size, brewDate, callback) {
             let respMsg;
             if (err) {
                 respMsg = err.message;
-                sendNotification("Temperature Poller :: " + err.message, callback);
+                sendNotification("Temperature Poller :: " + err.message);
             } else {
                 respMsg = "Persisted item with response " + JSON.stringify(resp) + " for item: \n" + paramsStr;
             }
 
             console.log(respMsg);
-
-            if (callback && !err) callback(null, "Completed output reading capture.");
         });
     }
 }
 
-function sendNotification(msg, callback) {
+function sendNotification(msg) {
     let sns = new AWS.SNS();
 
     sns.publish({
@@ -164,7 +181,5 @@ function sendNotification(msg, callback) {
     }, function(err, data) {
         if (err) console.log(err, err.stack);
         else console.log('Sent confirmation message: ' + msg);
-
-        if (callback) callback(null, msg);
     });
 }
