@@ -195,9 +195,27 @@ output "region" {
   value = "${var.region}"
 }
 
-///////////////
-TODO - Add tf to programatically add SSM Parameters for BCS data!
-///////////////
+// SSM Params for BCS API access
+resource "aws_ssm_parameter" "secret" {
+  name        = "bcs_ip"
+  description = "The current IP address of the BCS controller."
+  type        = "SecureString"
+  value       = "foo"
+}
+
+resource "aws_ssm_parameter" "secret" {
+  name        = "bcs_user"
+  description = "User name for authentication of restful API calls."
+  type        = "SecureString"
+  value       = "foo"
+}
+
+resource "aws_ssm_parameter" "secret" {
+  name        = "bcs_passwd"
+  description = "Password for authentication of restful API calls."
+  type        = "SecureString"
+  value       = "foo"
+}
 
 ////
 // Consolidated items that require functions to be deployed by apex prior to "apex infra apply" executing successfully
