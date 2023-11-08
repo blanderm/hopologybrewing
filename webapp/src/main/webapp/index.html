@@ -239,7 +239,7 @@
                     </div>
                     <div ng-show="selectedBrew" class="pull-right">&nbsp;&nbsp;</div>
                     <div ng-show="selectedBrew" class="pull-right">
-                        <h4>Brew: <select ng-change="renderCharts(selectedBrew, selectedBrew.brewDate, chartDatePicker.startDate, chartDatePicker.endDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
+                        <h4>Brew: <select ng-change="updateChartsForBrew(selectedBrew, selectedBrew.brewDate)" ng-model="selectedBrew" ng-options="x.name for x in brews"></select></h4>
                     </div>
                     <div ng-show="selectedBrew && chartDatePicker" class="pull-left">
                         <h4>Date Range: <input date-range-picker class="date-picker small-pad" min="dateMin" max="dateMax" type="text" ng-model="chartDatePicker" options="chartDatePickerOptions"/></h4>

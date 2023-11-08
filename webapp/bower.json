@@ -1,0 +1,25 @@
+{
+  "name": "hopology-brewing-controls",
+  "description": "Beer fermentation management companion to the BCS Brewery Control System",
+  "main": "app.js",
+  "authors": [
+    "Bryan Landerman"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "beer"
+  ],
+  "homepage": "https://github.com/blanderm/hopologybrewing",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src/main/webapp/bower_components/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-daterangepicker": "^0.3.0"
+  }
+}

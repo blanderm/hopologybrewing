@@ -33,10 +33,22 @@ Install Apex (see full directions on http://apex.run)
 curl https://raw.githubusercontent.com/apex/apex/master/install.sh | sh
 ```
 
+Install mvn to run the webapp (install Homebrew if you don't have it)
+
+```
+brew install mvn
+```
+
 Install npm, the Node Package Manager.
 
 ```
 brew install node
+```
+
+Install Java 1.8 and set JAVA_HOME in your user profile (.profile or .bash_profile)
+
+```
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8.0_202`
 ```
 
 Ensure you have set up an Apex AWS user and that you know the key and secret key. The roles can be assigned by Apex as long as your user has the following permissoins attached in the IAM console:
@@ -62,7 +74,7 @@ export AWS_PROFILE=brewery_profile
 ```
 
 
-### Building, Deploying and Running the code
+## Building, Deploying, and Running the AWS Pollers and Storage
 
 Prepare for Lambda Function deployment
 1. Initialize apex:
@@ -84,7 +96,7 @@ apex init
   "kms_arn": "<<TO BE INSERTED LATER>>"
 ```
 
-#### Deploy Infrastructure using terraform apex integration
+### Deploy Infrastructure using terraform apex integration
 1. Your AWS Profile should contain your region but if not, you can specify it in your variables.tf file in the infrastructure directory
 2. Open main.tf in the infrastructure file and update the tags to reflect your AWS account preferences
 3. Deploy infrastructure by first running a plan:
@@ -99,7 +111,7 @@ apex infra apply
 
 4. Copy the "hopologybrewing-key-arn" that is output upon completion.
 
-#### Deploy Lambda Functions
+### Deploy Lambda Functions
 1. Open your project.json and update the kms_arn with the value copied upon completion of the infrastructure deployment
 2. Confirm what will be deployed:
 ```
@@ -113,7 +125,7 @@ apex deploy
 6. Open the main.tf file and navigate to the bottom.  You'll notice several resource blocks commented out, uncomment them and re-run *apex infra apply*.  This will need to be repeated everytime a clean apply/deploy occurs.
 7. Log into the AWS console and navigate to your lambda functions.  You will need to select the kms key and manually encrypt each environment variable and save the function.  For some reason Apex doesn't do this automatically, issue discussed here: https://github.com/apex/apex/issues/651
 
-#### Remove your AWS resources:
+### Remove your AWS resources:
 1. Delete your functions:
 ```
 apex delete
@@ -126,6 +138,24 @@ apex infra destroy
 3. Open the variables.tf file and comment out the *variable "apex_function_brew_info_put" {}* line.
 4. Open the main.tf file and navigate to the bottom.  You'll notice several resource blocks under the comment *Consolidated items that require functions to be deployed by apex prior to "apex infra apply" executing successfully*.  Comment out all resource blocks below that comment. 
 
+## Build and run the local webapp:
+1. Update the AWS API endpoints in webapp/src/main/webapp/app.js, replacing XXX and YYY with the appropriate key:
+```
+const BREW_INFO_API_URL = "https://XXX.execute-api.us-west-2.amazonaws.com/api";
+const CLOUDWATCH_API_URL = "https://YYY.execute-api.us-west-2.amazonaws.com/api";
+```
+1. From the webapp directory:
+```
+mvn clean install -D skipTests=true
+```
+2. Install npm dependencies and bower components
+```
+npm install
+```
+3. Run the application, setting the ip, username, and password for the bcs controller
+```
+mvn spring-boot:run -Dbcs_ip=XXXXX -Duser=YYYYY -Dpwd=ZZZZ
+```
 ## Built With
 
 * [Amazon Lambda](https://aws.amazon.com/lambda/) - Serverless execution for polling the controller

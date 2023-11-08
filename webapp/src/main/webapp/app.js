@@ -1,5 +1,5 @@
-const BREW_INFO_API_URL = "https://XXXXXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
-const CLOUDWATCH_API_URL = "https://XXXXXXXXXXXXX.execute-api.us-west-2.amazonaws.com/api";
+const BREW_INFO_API_URL = "https://XXX.execute-api.us-west-2.amazonaws.com/api";
+const CLOUDWATCH_API_URL = "https://YYY.execute-api.us-west-2.amazonaws.com/api";
 
 app = angular.module('brewing-bcs', ['daterangepicker'])
     .controller('outputController', function ($scope, $http) {
@@ -51,31 +51,35 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
         });
 
         $scope.convertTimerValue = function (value) {
-            // days
-            let calculatedTimer = value / 10 / 60 / 60 / 24;
-            let strTimer = "";
-            let floor;
+            if (value > 0) {
+                // days
+                let calculatedTimer = value / 10 / 60 / 60 / 24;
+                let strTimer = "";
+                let floor;
 
-            floor = Math.floor(calculatedTimer);
-            if (floor >= 1) {
-                strTimer = floor + (floor > 1 ? " days " : " day ");
+                floor = Math.floor(calculatedTimer);
+                if (floor >= 1) {
+                    strTimer = floor + (floor > 1 ? " days " : " day ");
+                }
+
+                // hours
+                calculatedTimer = calculatedTimer % 1 * 24;
+                floor = Math.floor(calculatedTimer);
+                strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
+
+                // mins
+                calculatedTimer = calculatedTimer % 1 * 60;
+                floor = Math.floor(calculatedTimer);
+                strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
+
+                // seconds
+                calculatedTimer = calculatedTimer % 1 * 60;
+                floor = Math.floor(calculatedTimer);
+
+                return strTimer + (floor < 10 ? '0' + floor : floor) ;
+            } else {
+                return "N/A"
             }
-
-            // hours
-            calculatedTimer = calculatedTimer % 1 * 24;
-            floor = Math.floor(calculatedTimer);
-            strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
-
-            // mins
-            calculatedTimer = calculatedTimer % 1 * 60;
-            floor = Math.floor(calculatedTimer);
-            strTimer = strTimer + (floor < 10 ? '0' + floor : floor)  + ":";
-
-            // seconds
-            calculatedTimer = calculatedTimer % 1 * 60;
-            floor = Math.floor(calculatedTimer);
-
-            return strTimer + (floor < 10 ? '0' + floor : floor) ;
         };
     })
 
@@ -117,6 +121,10 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
                     // if brew is complete, render all data
                     endDate = moment($scope.selectedBrew.brewCompleteDate);
                     startDate = moment($scope.selectedBrew.brewDate);
+                } else if (moment($scope.selectedBrew.brewDate).isAfter(moment())) {
+                    // brew hasn't happened yet
+                    endDate = moment();
+                    startDate = moment();
                 } else if (moment().subtract(2, 'days').isAfter($scope.selectedBrew.brewDate)) {
                     endDate = moment();
                     startDate = moment(endDate).subtract(2, 'days');
@@ -359,12 +367,23 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
             }
         };
 
-        // update to have different ranges for temp and outpus
-        $scope.renderCharts = function(selectedBrew, brewDate, lowerRange, upperRange) {
+        $scope.updateChartsForBrew = function(selectedBrew, brewDate) {
+            // when the brew changes, render the charge with the available brew dates
+            $scope.renderCharts(selectedBrew, brewDate, null, null);
+        }
+
+        // update to have different ranges for temp and outputs
+        $scope.renderCharts = function(selectedBrew, brewDate, lowRange, upRange) {
             $scope.brewDate = (selectedBrew.brewDate) ? moment(selectedBrew.brewDate).format("MM/DD/YYYY") : undefined;
             $scope.brewCompleteDate = (selectedBrew.brewCompleteDate) ? moment(selectedBrew.brewCompleteDate).format("M/D h:mm a") : undefined;
             $scope.yeastPitch = (selectedBrew.yeastPitch) ? moment(selectedBrew.yeastPitch).format("M/D h:mm a") : undefined;
             $scope.crashStart = (selectedBrew.crashStart) ? moment(selectedBrew.crashStart).format("M/D h:mm a") : undefined;
+
+            $scope.dateMin = (moment(selectedBrew.brewDate).isBefore(moment())) ? moment(selectedBrew.brewDate) : moment();
+            $scope.dateMax = (selectedBrew.brewCompleteDate > 0) ? moment(selectedBrew.brewCompleteDate) : moment();
+            $scope.chartDatePicker = {startDate: $scope.dateMin, endDate: $scope.dateMax};
+            lowerRange = (lowRange != null) ? lowRange : $scope.dateMin;
+            upperRange = (lowRange != null) ? upRange : $scope.dateMax;
 
             var pathVar = '';
 
@@ -391,7 +410,7 @@ app = angular.module('brewing-bcs', ['daterangepicker'])
 
             $http.get('/temp/history'.concat(pathVar).concat(rangeString)).
             then(function (response) {
-                chartOptions.chart.type ='';
+                chartOptions.chart.type ='line';
                 chartOptions.title = "Temperature History";
                 chartOptions.yAxis = {
                     title: { text: "Temperature (F)" },
